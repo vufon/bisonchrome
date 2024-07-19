@@ -1,0 +1,163 @@
+// Copyright (c) 2024 The Bitcoin developers
+// Distributed under the MIT software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
+import * as React from 'react';
+import styled from 'styled-components';
+import { ReactComponent as Home } from '../../static/icons/home.svg';
+import { ReactComponent as Send } from '../../static/icons/send.svg';
+import { ReactComponent as Tokens } from '../../static/icons/tokens.svg';
+import { ReactComponent as Receive } from '../../static/icons/receive.svg';
+import { ReactComponent as Wallet } from '../../static/icons/wallet.svg';
+import { ReactComponent as Bank } from '../../static/icons/bank.svg';
+import { ReactComponent as Contacts } from '../../static/icons/contacts.svg';
+import { ReactComponent as Airdrop } from '../../static/icons/airdrop-icon.svg';
+import { ReactComponent as Reward } from '../../static/icons/reward.svg';
+import { ReactComponent as Swap } from '../../static/icons/swap.svg';
+import { ReactComponent as Settings } from '../../static/icons/settings.svg';
+import { ReactComponent as Menu } from '../../static/icons/menu-icon.svg';
+import { ReactComponent as Close } from '../../static/icons/close-icon.svg';
+const Rotate = styled.div`
+    transform: rotate(-45deg);
+`;
+
+export const ContactsIcon = () => <Contacts title="Contact List" />;
+export const WalletIcon = () => <Wallet title="wallet" />;
+export const ReceiveIcon = () => <Receive title="tx-received" />;
+export const HomeIcon = () => <Home />;
+export const TokensIcon = () => <Tokens title="Tokens" />;
+export const BankIcon = () => <Bank title="wallets" />;
+export const AirdropIcon = () => <Airdrop title="tx-airdrop" />;
+export const RewardIcon = () => <Reward title="Cashtab Rewards" />;
+export const SwapIcon = () => <Swap title="swap" />;
+export const SettingsIcon = () => <Settings title="settings" />;
+export const CloseIcon = () => <Close title="close" />;
+export const MenuIcon = () => <Menu title="menu" />;
+export const SendIcon = () => (
+    <Rotate>
+        <Send title="tx-sent" />
+    </Rotate>
+);
+
+export const NavWrapper = styled.div`
+    width: 100%;
+    height: 100%;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 1.3rem;
+    margin-bottom: 5px;
+`;
+
+export const NavIcon = styled.span`
+     @media (hover: hover) {
+        ${NavWrapper}:hover & {
+            background-color: ${props =>
+        props.clicked ? 'transparent' : props.theme.eCashPurple};
+            ::before,
+            ::after {
+                background-color: ${props => props.theme.eCashPurple};
+            }
+        }
+    }
+
+    position: relative;
+    background-color: ${props =>
+        props.clicked ? 'transparent' : props.theme.buttons.primary.color};
+    width: 2rem;
+    height: 2px;
+    display: inline-block;
+    transition: transform 300ms, top 300ms, background-color 300ms;
+    &::before,
+    &::after {
+        content: '';
+        background-color: ${props => props.theme.buttons.primary.color};
+        width: 2rem;
+        height: 2px;
+        display: inline-block;
+        position: absolute;
+        left: 0;
+        transition: transform 300ms, top 300ms, background-color 300ms;
+    }
+    &::before {
+        top: ${props => (props.clicked ? '0' : '-0.8rem')};
+        transform: ${props => (props.clicked ? 'rotate(135deg)' : 'rotate(0)')};
+    }
+    &::after {
+        top: ${props => (props.clicked ? '0' : '0.8rem')};
+        transform: ${props =>
+        props.clicked ? 'rotate(-135deg)' : 'rotate(0)'};
+    }
+`;
+
+export const NavItem = styled.button`
+    display: flex;
+    justify-content: space-between;
+    text-align: left;
+    font-size: 24px;
+    padding: 12px;
+    align-items: center;
+    width: 100%;
+    white-space: nowrap;
+    background-color: ${props => props.theme.walletBackground};
+    border: 1px solid ${props => props.theme.walletBackground};
+    color: ${props => props.theme.contrast};
+    gap: 6px;
+    cursor: pointer;
+    &:hover {
+        color: ${props => props.theme.eCashPurple};
+        svg,
+        g,
+        path {
+            fill: ${props => props.theme.eCashPurple};
+        }
+    }
+    svg {
+        fill: ${props => props.theme.contrast};
+        max-width: 33px;
+        height: auto;
+        flex: 1;
+    }
+    g,
+    path {
+        fill: ${props => props.theme.contrast};
+    }
+    p {
+        flex: 2;
+        margin: 0;
+    }
+    ${({ active, ...props }) =>
+        active &&
+        `    
+        color: ${props.theme.navActive};
+        svg, g, path {
+            fill: ${props.theme.navActive};
+        }
+  `}
+`;
+
+export const NavMenu = styled.div`
+    position: fixed;
+    margin-right: 125px;
+    bottom: 80px;
+    display: flex;
+    width: 225px;
+    flex-direction: column;
+    border: ${props => (props.open ? '1px solid' : '0px solid')};
+    border-color: ${props =>
+        props.open ? props.theme.contrast : 'transparent'};
+    justify-content: center;
+    align-items: center;
+    @media (max-width: 768px) {
+        right: 0;
+        margin-right: 0;
+    }
+    overflow: hidden;
+    transition: ${props =>
+        props.open
+            ? 'max-height 250ms ease-in-out , border-color 250ms ease-in-out, border-width 250ms ease-in-out'
+            : 'max-height 250ms cubic-bezier(0, 1, 0, 1), border-color 250ms ease-in-out, border-width 250ms ease-in-out'};
+    max-height: ${props => (props.open ? '100vh' : '0')};
+`;
