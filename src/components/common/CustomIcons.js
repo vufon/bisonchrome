@@ -17,6 +17,16 @@ import { ReactComponent as Swap } from '../../static/icons/swap.svg';
 import { ReactComponent as Settings } from '../../static/icons/settings.svg';
 import { ReactComponent as Menu } from '../../static/icons/menu-icon.svg';
 import { ReactComponent as Close } from '../../static/icons/close-icon.svg';
+import { ReactComponent as QRCode } from '../../static/icons/qrcode.svg';
+import { ReactComponent as CopyPaste } from '../../static/icons/copypaste.svg';
+import { ReactComponent as Trashcan } from '../../static/icons/trashcan.svg';
+import { ReactComponent as Edit } from '../../static/icons/edit.svg';
+import { ReactComponent as AddContact } from '../../static/icons/addcontact.svg';
+import { ReactComponent as XLogo } from '../../static/icons/xlogo.svg';
+import { ReactComponent as Dollar } from '../../static/icons/dollar.svg';
+import { ReactComponent as Facebook } from '../../static/icons/Facebook_Logo.svg';
+import { ReactComponent as Github } from '../../static/icons/github.svg';
+
 const Rotate = styled.div`
     transform: rotate(-45deg);
 `;
@@ -33,12 +43,84 @@ export const SwapIcon = () => <Swap title="swap" />;
 export const SettingsIcon = () => <Settings title="settings" />;
 export const CloseIcon = () => <Close title="close" />;
 export const MenuIcon = () => <Menu title="menu" />;
+export const QRCodeIcon = () => <QRCode />;
+export const CopyPasteIcon = () => <CopyPaste title="copy-paste" />;
+export const AddContactIcon = () => <AddContact title="add-contact" />;
+export const DollarIcon = () => <Dollar title="dollar sign" />;
+
+
+export const ThemedXIcon = styled(XLogo)`
+    height: 42px;
+    width: 100%;
+`;
+export const ThemedFacebookIcon = styled(Facebook)`
+    height: 42px;
+    width: 100%;
+`;
+export const SocialContainer = styled.div`
+    margin: auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 220px;
+    height: 42px;
+`;
+export const SocialLink = styled.a`
+    width: 100%;
+    height: 100%;
+    @media (hover: hover) {
+        :hover {
+            svg {
+                fill: ${props => props.theme.eCashPurple};
+                path:not(#F) {
+                    fill: ${props => props.theme.eCashPurple};
+                }
+            }
+        }
+    }
+`;
+const GithubIconWrapper = styled.div`
+    svg {
+        height: 42px;
+        width: 42px;
+    }
+    svg,
+    g,
+    path {
+        fill: ${props => props.theme.contrast};
+    }
+    fill: ${props => props.theme.contrast};
+`;
+export const GithubIcon = () => (
+    <GithubIconWrapper>
+        <Github height="142px" width="142px" title="Github" />
+    </GithubIconWrapper>
+);
 export const SendIcon = () => (
     <Rotate>
         <Send title="tx-sent" />
     </Rotate>
 );
-
+const TrashCanWrapper = styled.div`
+    stroke: ${props => props.theme.eCashBlue};
+    fill: ${props => props.theme.eCashBlue};
+    cursor: pointer;
+`;
+export const TrashcanIcon = () => (
+    <TrashCanWrapper>
+        <Trashcan title="trashcan" />
+    </TrashCanWrapper>
+);
+const EditWrapper = styled.div`
+    stroke: ${props => props.theme.eCashBlue};
+    fill: ${props => props.theme.eCashBlue};
+    cursor: pointer;
+`;
+export const EditIcon = () => (
+    <EditWrapper>
+        <Edit title="edit" />
+    </EditWrapper>
+);
 export const NavWrapper = styled.div`
     width: 100%;
     height: 100%;

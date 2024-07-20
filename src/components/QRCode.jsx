@@ -106,14 +106,13 @@ const DisplayCopiedAddress = styled.span`
 
 export const QRCode = ({
     address,
-    size = 210,
+    size = 400,
     logoSizePx = 36,
     onClick = () => null,
 }) => {
     address = address ? address : '';
 
     const [visible, setVisible] = useState(false);
-    const trimAmount = 3;
     const handleOnClick = evt => {
         setVisible(true);
         setTimeout(() => {

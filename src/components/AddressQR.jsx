@@ -1,6 +1,5 @@
 import { QRCode } from './QRCode';
 import styled from 'styled-components';
-import useWindowDimensions from './common/useWindowDimensions';
 const QrCodeCtn = styled.div``;
 
 export const ReceiveCtn = styled.div`
@@ -16,7 +15,8 @@ export const ReceiveCtn = styled.div`
 `;
 
 export default function AddressQR() {
-  const { width, height } = useWindowDimensions();
+  const width = 500
+  const height = 600
   const getQrCodeWidth = windowWidthPx => {
     const CASHTAB_FULLSCREEN_WIDTH = 500;
     if (windowWidthPx > CASHTAB_FULLSCREEN_WIDTH) {
@@ -39,7 +39,7 @@ export default function AddressQR() {
         <QRCode
           address="DsbnXmY5yud8MwenFQJEfabQfZDedakeuwY"
           size={getQrCodeWidth(width)}
-          logoSizePx={width > 500 ? 48 : 24}
+          logoSizePx={width >= 500 ? 48 : 24}
         />
       </QrCodeCtn>
     </ReceiveCtn>

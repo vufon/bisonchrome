@@ -3,13 +3,15 @@ import './static/css/bootstrap/bootstrap.min.css';
 import './static/js/bootstrap/bootstrap.bundle.min.js';
 import { useState, useEffect } from "react";
 import Home from "./components/Home";
-import Settings from "./components/Settings";
+import SendDCR from "./components/send/SendDCR.jsx";
+import ReceiveDCR from "./components/receive/ReceiveDCR.jsx";
+import Wallets from "./components/wallets/index.js"
 import styled, { css, ThemeProvider } from 'styled-components';
 import { theme } from './static/js/styles/theme.js';
+import BalanceArea from "./components/BalanceArea";
 import {
   HomeIcon,
   SendIcon,
-  TokensIcon,
   ReceiveIcon,
   NavWrapper,
   NavIcon,
@@ -22,6 +24,8 @@ import {
   RewardIcon,
   SettingsIcon,
 } from './components/common/CustomIcons';
+import BackupWallet from './components/backupwallet/BackupWallet.js';
+import Configure from './components/configure/Configure.js';
 export const NavButton = styled.button`
     :focus,
     :active {
@@ -93,44 +97,49 @@ function App() {
   const [page, setPage] = useState('home')
   const [navMenuClicked, setNavMenuClicked] = useState(false);
   const handleNavMenuClick = () => setNavMenuClicked(!navMenuClicked);
-  const [state, setState] = useState({
-    urlOne: '',
-    urlTwo: '',
-    urlThree: '',
-    groupOneIsPinned: false,
-    urlFour: '',
-    urlFive: '',
-    urlSix: '',
-    groupTwoIsPinned: false,
-    urlSeven: '',
-    urlEight: '',
-    urlNine: '',
-    groupThreeIsPinned: false
-  })
+
+  const openNewTab = () => {
+    window.open(`index.html`);
+  }
 
   return (
     <ThemeProvider theme={theme}>
       <div className="app">
-        {page === 'home' &&
-          <Home
-            state={state}
-            setPage={setPage}
-          />
-        }
-        {page === 'settings' &&
-          <Settings
-            state={state}
-            setState={setState}
-            setPage={setPage}
-          />
-        }
+        <div className="container">
+          <div class="top-banner d-flex justify-content-between">
+            <div></div>
+            <img src="/images/logo.png" alt="cashtab" class="main-logo" />
+            <img src="/images/popout.svg" alt="Open in tab" width="25" height="25" onClick={openNewTab} class="cursor-pointer" />
+          </div>
+          <BalanceArea />
+          {page === 'home' &&
+            <Home />
+          }
+          {page === 'send' &&
+            <SendDCR />
+          }
+          {page === 'receive' &&
+            <ReceiveDCR />
+          }
+          {page === 'wallets' &&
+            <Wallets />
+          }
+          {page === 'backup' &&
+            <BackupWallet />
+          }
+          {page === 'configure' &&
+            <Configure />
+          }
+        </div>
       </div>
       <Footer>
         <NavButton
+          aria-label="Home Screen"
           active={
             location.pathname === '/' ||
             location.pathname === '/wallet'
           }
+          onClick={() => setPage('home')}
         >
           <HomeIcon />
         </NavButton>
@@ -139,20 +148,23 @@ function App() {
           aria-label="Send Screen"
           active={location.pathname === '/send'}
           style={{ paddingBottom: '10px' }}
+          onClick={() => setPage('send')}
         >
           <SendIcon />
         </NavButton>
         <NavButton
-          aria-label="Tokens"
-          active={location.pathname === '/etokens'}
-        >
-          <TokensIcon />
-        </NavButton>
-        <NavButton
-          aria-label="Receive"
+          aria-label="Receive Screen"
           active={location.pathname === '/receive'}
+          onClick={() => setPage('receive')}
         >
           <ReceiveIcon />
+        </NavButton>
+        <NavButton
+          aria-label="Wallets"
+          active={location.pathname === '/wallets'}
+          onClick={() => setPage('wallets')}
+        >
+          <BankIcon />
         </NavButton>
         <NavWrapper
           title="Show Other Screens"
@@ -165,6 +177,7 @@ function App() {
           >
             <NavItem
               active={location.pathname === '/backup'}
+              onClick={() => setPage('backup')}
             >
               {' '}
               <p>Wallet Backup</p>
@@ -172,44 +185,9 @@ function App() {
             </NavItem>
             <NavItem
               active={
-                location.pathname === '/wallets'
-              }
-            >
-              {' '}
-              <p>Wallets</p>
-              <BankIcon />
-            </NavItem>
-            <NavItem
-              active={
-                location.pathname === '/contacts'
-              }
-            >
-              {' '}
-              <p>Contacts</p>
-              <ContactsIcon />
-            </NavItem>
-            <NavItem
-              active={
-                location.pathname === '/airdrop'
-              }
-            >
-              {' '}
-              <p>Airdrop</p>
-              <AirdropIcon />
-            </NavItem>
-            <NavItem
-              active={
-                location.pathname === '/rewards'
-              }
-            >
-              {' '}
-              <p>Rewards</p>
-              <RewardIcon />
-            </NavItem>
-            <NavItem
-              active={
                 location.pathname === '/configure'
               }
+              onClick={() => setPage('configure')}
             >
               <p>Settings</p>
               <SettingsIcon />
