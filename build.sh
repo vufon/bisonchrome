@@ -3,7 +3,7 @@ echo "Script location: ${BASEDIR}"
 
 rm -rf ${BASEDIR}/build/static/js/bootstrap
 
-npm run build
+npm run build --location=global
 
 # Copy from bootstrap to build folder
 BASEDIR=$(dirname $0)

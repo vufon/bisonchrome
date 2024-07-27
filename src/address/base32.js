@@ -68,7 +68,7 @@ var CHARSET_INVERSE_INDEX = {
  * @returns {string}
  * @throws {ValidationError}
  */
-function encode(data) {
+export const encode = (data) => {
     validate(data instanceof Uint8Array, 'Invalid data: ' + data + '.');
     var base32 = '';
     for (var i = 0; i < data.length; ++i) {
@@ -87,7 +87,7 @@ function encode(data) {
  * @returns {Uint8Array}
  * @throws {ValidationError}
  */
-function decode(string) {
+export const decode = (string) => {
     if (typeof string !== 'string') {
         return
     }
@@ -101,6 +101,3 @@ function decode(string) {
     }
     return data;
 }
-
-export const encode = encode;
-export const decode = decode;
