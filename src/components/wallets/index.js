@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 import React from 'react';
+import { WalletContext } from '../../wallet/context';
 import {
     TrashcanIcon,
     EditIcon,
@@ -26,8 +27,18 @@ import {
     WalletBalance,
     ActivateButton,
 } from './styles';
+import { generateMnemonic, createCashtabWallet } from '../../wallet/index';
 
 const Wallets = () => {
+    const ContextValue = React.useContext(WalletContext);
+    const { updateCashtabState, cashtabState } = ContextValue;
+    const { wallets } = cashtabState;
+    async function createNewWallet() {
+        const newWallet = await createCashtabWallet(generateMnemonic());
+        console.log(JSON.stringify(newWallet))
+        updateCashtabState('wallets', [...wallets, newWallet]);
+    }
+
     return (
         <>
             <WalletsList title="Wallets">
@@ -96,7 +107,7 @@ const Wallets = () => {
                     </Wallet>
                 </WalletsPanel>
                 <WalletRow>
-                    <PrimaryButton>
+                    <PrimaryButton onClick={() => createNewWallet()}>
                         New Wallet
                     </PrimaryButton>
                 </WalletRow>

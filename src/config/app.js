@@ -1,12 +1,14 @@
 // Copyright (c) 2023-2024 The Bitcoin developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
+import mainLogo from '../static/images/logo-icon.png';
 
 // App settings not adjustable by the user
 const appConfig = {
     name: 'Decred',
     ticker: 'DCR',
     derivationPath: 1899,
+    logo: mainLogo,
     legacyPrefix: 'bitcoincash',
     coingeckoId: 'ecash',
     fiatUpdateIntervalMs: 90000,
