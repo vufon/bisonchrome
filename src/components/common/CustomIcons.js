@@ -4,6 +4,7 @@
 
 import * as React from 'react';
 import styled from 'styled-components';
+import appConfig from '../../config/app';
 import { ReactComponent as Home } from '../../static/icons/home.svg';
 import { ReactComponent as Send } from '../../static/icons/send.svg';
 import { ReactComponent as Tokens } from '../../static/icons/tokens.svg';
@@ -47,7 +48,9 @@ export const QRCodeIcon = () => <QRCode />;
 export const CopyPasteIcon = () => <CopyPaste title="copy-paste" />;
 export const AddContactIcon = () => <AddContact title="add-contact" />;
 export const DollarIcon = () => <Dollar title="dollar sign" />;
-
+export const CashReceivedNotificationIcon = () => (
+    <img height={'24px'} width={'24px'} src={appConfig.logo} />
+);
 
 export const ThemedXIcon = styled(XLogo)`
     height: 42px;
