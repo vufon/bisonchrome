@@ -8,8 +8,8 @@ import useWallet from './useWallet';
 
 export const WalletContext = React.createContext();
 
-export const WalletProvider = ({ chronik, ecc, children }) => {
-    const wallet = useWallet(chronik, ecc);
+export const WalletProvider = ({ children }) => {
+    const wallet = useWallet();
     return (
         <WalletContext.Provider value={wallet}>
             {children}
@@ -18,7 +18,5 @@ export const WalletProvider = ({ chronik, ecc, children }) => {
 };
 
 WalletProvider.propTypes = {
-    chronik: PropTypes.object,
-    ecc: PropTypes.object,
     children: PropTypes.node,
 };
