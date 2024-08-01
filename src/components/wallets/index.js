@@ -31,7 +31,7 @@ import * as randomBytes from 'randombytes';
 import * as utxolib from '@trezor/utxo-lib';
 import appConfig from '../../config/app';
 import { encode, decode } from '../../address/dcraddr'
-import { createDecredWallet } from '../../wallet/index'
+import { createDecredWallet, getWalletsForNewActiveWallet } from '../../wallet/index'
 import { WalletContext } from '../../wallet/context';
 import { toast } from 'react-toastify';
 import { toFormattedXec } from '../../utils/formatting';
@@ -39,6 +39,7 @@ import { getUserLocale } from '../../utils/helpers';
 import Modal from '../../components/common/Modal';
 import { getWalletNameError, validateMnemonic } from '../../validation';
 import { ModalInput } from '../../components/common/Inputs';
+import debounce from 'lodash.debounce';
 
 export const generateMnemonic = () => {
     const mnemonic = bip39.generateMnemonic(
@@ -256,6 +257,21 @@ const Wallets = () => {
         }
     };
 
+    const activateWallet = (walletToActivate, wallets) => {
+        // Get desired wallets array after activating walletToActivate
+        const walletsAfterActivation = getWalletsForNewActiveWallet(
+            walletToActivate,
+            wallets,
+        );
+
+        // Event("Category", "Action", "Label")
+        // Track number of times a different wallet is activated
+        //  Event('Configure.js', 'Activate', '');
+
+        // Update wallets to activate this wallet
+        updateDecredState('wallets', walletsAfterActivation);
+    };
+
     return (
         <>
             {walletToBeRenamed !== null && (
@@ -402,6 +418,14 @@ const Wallets = () => {
                                         </SvgButtonPanel>
                                         <ActivateButton
                                             aria-label={`Activate ${wallet.name}`}
+                                            onClick={debounce(
+                                                () =>
+                                                    activateWallet(
+                                                        wallet,
+                                                        wallets,
+                                                    ),
+                                                500,
+                                            )}
                                         >
                                             Activate
                                         </ActivateButton>
