@@ -52,7 +52,7 @@ export const generateMnemonic = () => {
 const Wallets = () => {
     const ContextValue = React.useContext(WalletContext);
     const { updateDecredState, decredState } = ContextValue;
-    const { wallets } = decredState;
+    const { wallets, contactList } = decredState;
     const emptyFormDataErrors = {
         renamedWalletName: false,
         walletToBeDeletedName: false,
@@ -69,6 +69,7 @@ const Wallets = () => {
     const [formDataErrors, setFormDataErrors] = useState(emptyFormDataErrors);
     const [walletToBeDeleted, setWalletToBeDeleted] = useState(null);
     const [showImportWalletModal, setShowImportWalletModal] = useState(false);
+    const [walletToBeRenamed, setWalletToBeRenamed] = useState(null);
     const userLocale = getUserLocale(navigator);
     async function createWallet() {
         //const wallet = CoinKey.createRandom(CoinInfo("dcr").versions);
@@ -180,8 +181,104 @@ const Wallets = () => {
         setShowImportWalletModal(false);
     }
 
+    const renameWallet = async () => {
+        // Find the wallet you want to rename
+        let walletToUpdate = wallets.find(
+            wallet => wallet.mnemonic === walletToBeRenamed.mnemonic,
+        );
+        const oldName = walletToUpdate.name;
+
+        // if a match was found
+        if (typeof walletToUpdate !== 'undefined') {
+            // update the walllet name
+            walletToUpdate.name = formData.renamedWalletName;
+
+            // Update localforage and state
+            await updateDecredState('wallets', wallets);
+            toast.success(
+                `"${oldName}" renamed to "${formData.renamedWalletName}"`,
+            );
+        } else {
+            toast.error(`Unable to find wallet ${walletToBeRenamed.name}`);
+        }
+        // Clear walletToBeRenamed field to hide the modal
+        setWalletToBeRenamed(null);
+
+        // Clear wallet rename input
+        setFormData(previous => ({
+            ...previous,
+            renamedWalletName: '',
+        }));
+    };
+
+    const deleteWallet = async () => {
+        // filter wallet from wallets
+        const updatedWallets = wallets.filter(
+            wallet => wallet.mnemonic !== walletToBeDeleted.mnemonic,
+        );
+
+        // Update localforage and state
+        await updateDecredState('wallets', updatedWallets);
+        toast.success(`"${walletToBeDeleted.name}" deleted`);
+
+        // Reset walletToBeDeleted to hide the modal
+        setWalletToBeDeleted(null);
+
+        // Clear wallet to delete input
+        setFormData(previous => ({
+            ...previous,
+            walletToBeDeletedName: '',
+        }));
+    };
+
+    const addWalletToContacts = async wallet => {
+        const addressToAdd = wallet.paths[42].address;
+        // Check to see if the contact exists
+        const contactExists = contactList.find(
+            contact => contact.address === addressToAdd,
+        );
+
+        if (typeof contactExists !== 'undefined') {
+            // Contact exists
+            // Not expected to ever happen from Tx.js as user should not see option to
+            // add an existing contact
+            toast.error(`${addressToAdd} already exists in Contacts`);
+        } else {
+            contactList.push({
+                name: wallet.name,
+                address: addressToAdd,
+            });
+            // update localforage and state
+            await updateDecredState('contactList', contactList);
+            toast.success(
+                `${wallet.name} (${addressToAdd}) added to Contact List`,
+            );
+        }
+    };
+
     return (
         <>
+            {walletToBeRenamed !== null && (
+                <Modal
+                    height={180}
+                    title={`Rename "${walletToBeRenamed.name}"?`}
+                    handleOk={renameWallet}
+                    handleCancel={() => setWalletToBeRenamed(null)}
+                    showCancelButton
+                    disabled={
+                        formDataErrors.renamedWalletName !== false ||
+                        formData.renamedWalletName === ''
+                    }
+                >
+                    <ModalInput
+                        placeholder="Enter new wallet name"
+                        name="renamedWalletName"
+                        value={formData.renamedWalletName}
+                        error={formDataErrors.renamedWalletName}
+                        handleInput={handleInput}
+                    />
+                </Modal>
+            )}
             {showImportWalletModal && (
                 <Modal
                     height={180}
@@ -204,6 +301,27 @@ const Wallets = () => {
                     />
                 </Modal>
             )}
+            {walletToBeDeleted !== null && (
+                <Modal
+                    height={210}
+                    title={`Delete "${walletToBeDeleted.name}"?`}
+                    handleOk={deleteWallet}
+                    handleCancel={() => setWalletToBeDeleted(null)}
+                    showCancelButton
+                    disabled={
+                        formDataErrors.walletToBeDeletedName !== false ||
+                        formData.walletToBeDeletedName === ''
+                    }
+                >
+                    <ModalInput
+                        placeholder={`Type "delete ${walletToBeDeleted.name}" to confirm`}
+                        name="walletToBeDeletedName"
+                        value={formData.walletToBeDeletedName}
+                        handleInput={handleInput}
+                        error={formDataErrors.walletToBeDeletedName}
+                    />
+                </Modal>
+            )}
             <WalletsList title="Wallets">
                 <WalletsPanel>
                     {wallets.map((wallet, index) =>
@@ -222,10 +340,16 @@ const Wallets = () => {
                                     <IconButton
                                         name={`Rename ${wallet.name}`}
                                         icon={<EditIcon />}
+                                        onClick={() =>
+                                            setWalletToBeRenamed(wallet)
+                                        }
                                     />
                                     <IconButton
                                         name={`Add ${wallet.name} to contacts`}
                                         icon={<AddContactIcon />}
+                                        onClick={() =>
+                                            addWalletToContacts(wallet)
+                                        }
                                     />
                                 </SvgButtonPanel>
                             </WalletRow>
@@ -257,14 +381,23 @@ const Wallets = () => {
                                             <IconButton
                                                 name={`Rename ${wallet.name}`}
                                                 icon={<EditIcon />}
+                                                onClick={() =>
+                                                    setWalletToBeRenamed(wallet)
+                                                }
                                             />
                                             <IconButton
                                                 name={`Add Account2 to contacts`}
                                                 icon={<AddContactIcon />}
+                                                onClick={() =>
+                                                    addWalletToContacts(wallet)
+                                                }
                                             />
                                             <IconButton
                                                 name={`Delete ${wallet.name}`}
                                                 icon={<TrashcanIcon />}
+                                                onClick={() =>
+                                                    setWalletToBeDeleted(wallet)
+                                                }
                                             />
                                         </SvgButtonPanel>
                                         <ActivateButton

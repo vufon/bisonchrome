@@ -122,18 +122,16 @@ export const isValidXecSendAmount = (
         return 'Amount must be greater than 0';
     }
     if (sendAmountSatoshis < appConfig.dustSats) {
-        return `Send amount must be at least ${toDCR(appConfig.dustSats)} ${
-            appConfig.ticker
-        }`;
+        return `Send amount must be at least ${toDCR(appConfig.dustSats)} ${appConfig.ticker
+            }`;
     }
     if (sendAmountSatoshis > balanceSats) {
         return `Amount ${toDCR(sendAmountSatoshis).toLocaleString(userLocale, {
             minimumFractionDigits: appConfig.cashDecimals,
         })} ${appConfig.ticker} exceeds wallet balance of ${toDCR(
             balanceSats,
-        ).toLocaleString(userLocale, { minimumFractionDigits: 2 })} ${
-            appConfig.ticker
-        }`;
+        ).toLocaleString(userLocale, { minimumFractionDigits: 2 })} ${appConfig.ticker
+            }`;
     }
     return true;
 };
@@ -162,11 +160,11 @@ export const isValidTokenDecimals = tokenDecimals => {
 
 const TOKEN_DOCUMENT_URL_REGEX = new RegExp(
     '^(https?:\\/\\/)?' + // protocol (optional)
-        '((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|' + // domain name
-        '((\\d{1,3}\\.){3}\\d{1,3}))' + // OR ip (v4) address
-        '(\\:\\d+)?(\\/[-a-z\\d%_().~+]*)*' + // port and path
-        '(\\?[;&a-z\\d%_.~+=-]*)?' + // query string
-        '(\\#[-a-z\\d_]*)?$',
+    '((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|' + // domain name
+    '((\\d{1,3}\\.){3}\\d{1,3}))' + // OR ip (v4) address
+    '(\\:\\d+)?(\\/[-a-z\\d%_().~+]*)*' + // port and path
+    '(\\?[;&a-z\\d%_.~+=-]*)?' + // query string
+    '(\\#[-a-z\\d_]*)?$',
     'i',
 ); // fragment locator
 
@@ -416,12 +414,12 @@ export const isValidCashtabWallet = wallet => {
     if (typeof wallet.paths[42] === 'undefined') {
         return false;
     }
-    for(var key in wallet.paths) {
+    for (var key in wallet.paths) {
         const value = wallet.paths[key]
         if (!('address' in value) || !('wif' in value)) {
             // If any given path does not have all of these keys, the wallet is invalid
             pathsValid = false;
-        } 
+        }
     }
     if (!pathsValid) {
         // Invalid path
@@ -477,9 +475,8 @@ export const isValidTokenSendOrBurnAmount = (
             if (decimals === 0) {
                 return `This token does not support decimal places`;
             }
-            return `This token supports no more than ${decimals} decimal place${
-                decimals === 1 ? '' : 's'
-            }`;
+            return `This token supports no more than ${decimals} decimal place${decimals === 1 ? '' : 's'
+                }`;
         }
     }
     return true;
@@ -505,4 +502,38 @@ export const getContactNameError = (name, contacts) => {
         }
     }
     return false;
+};
+
+/**
+ * Check if an array is a valid Cashtab contact list
+ * A valid contact list is an array of objects
+ * An empty contact list looks like [{}]
+ * @param {array} contactList
+ * @returns {bool}
+ */
+export const isValidContactList = contactList => {
+    if (!Array.isArray(contactList)) {
+        return false;
+    }
+    for (const contact of contactList) {
+        // Must have keys 'address' and 'name'
+        if (
+            typeof contact === 'object' &&
+            'address' in contact &&
+            'name' in contact
+        ) {
+            // Address must be a valid XEC address, name must be a string
+            const { address, name } = contact;
+            //TODO: check valid address of wallet
+            if (typeof name === 'string') {
+                // This contact is valid
+                continue;
+            }
+            // Any single invalid contact makes the whole list invalid
+            return false;
+        }
+        return false;
+    }
+    // If you get here, it's good
+    return true;
 };

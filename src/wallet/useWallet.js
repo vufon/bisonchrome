@@ -7,6 +7,7 @@ import {
     isValidCashtabSettings,
     isValidCashtabCache,
     migrateLegacyCashtabSettings,
+    isValidContactList
 } from '../validation';
 import localforage from 'localforage';
 import appConfig from '../config/app';
@@ -108,6 +109,23 @@ const useWallet = () => {
      */
     const loadDecredState = async () => {
         // cashtabState is initialized with defaults when this component loads
+        // contactList
+        let contactList = await localforage.getItem('contactList');
+        if (contactList !== null) {
+            // If we find a contactList in localforage
+            if (!isValidContactList(contactList)) {
+                // and this contactList is invalid, migrate
+
+                // contactList is only expected to be invalid as legacy empty, i.e. [{}]
+                // We do not call a function to migrate contactList as no other migration is expected
+                contactList = [];
+                // Update localforage on app load only if existing values are in an obsolete format
+                updateCashtabState('contactList', contactList);
+            }
+            // Set cashtabState contactList to valid localforage or migrated
+            decredState.contactList = contactList;
+        }
+
         // settings
         let settings = await localforage.getItem('settings');
         if (settings !== null) {
@@ -381,10 +399,9 @@ const useWallet = () => {
             if (tens > prevTens) {
                 // We have passed a $10 milestone
                 toast(
-                    `XEC is now ${
-                        supportedFiatCurrencies[
-                            decredState.settings.fiatCurrency
-                        ].symbol
+                    `XEC is now ${supportedFiatCurrencies[
+                        decredState.settings.fiatCurrency
+                    ].symbol
                     }${fiatPrice} ${decredState.settings.fiatCurrency.toUpperCase()}`,
                     { icon: CashReceivedNotificationIcon },
                 );
