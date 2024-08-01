@@ -2,7 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-import React from 'react';
+import React, { useState } from 'react';
 import {
     TrashcanIcon,
     EditIcon,
@@ -36,6 +36,9 @@ import { WalletContext } from '../../wallet/context';
 import { toast } from 'react-toastify';
 import { toFormattedXec } from '../../utils/formatting';
 import { getUserLocale } from '../../utils/helpers';
+import Modal from '../../components/common/Modal';
+import { getWalletNameError, validateMnemonic } from '../../validation';
+import { ModalInput } from '../../components/common/Inputs';
 
 export const generateMnemonic = () => {
     const mnemonic = bip39.generateMnemonic(
@@ -50,6 +53,22 @@ const Wallets = () => {
     const ContextValue = React.useContext(WalletContext);
     const { updateDecredState, decredState } = ContextValue;
     const { wallets } = decredState;
+    const emptyFormDataErrors = {
+        renamedWalletName: false,
+        walletToBeDeletedName: false,
+        newWalletName: false,
+        mnemonic: false,
+    };
+    const emptyFormData = {
+        renamedWalletName: '',
+        walletToBeDeletedName: '',
+        newWalletName: '',
+        mnemonic: '',
+    };
+    const [formData, setFormData] = useState(emptyFormData);
+    const [formDataErrors, setFormDataErrors] = useState(emptyFormDataErrors);
+    const [walletToBeDeleted, setWalletToBeDeleted] = useState(null);
+    const [showImportWalletModal, setShowImportWalletModal] = useState(false);
     const userLocale = getUserLocale(navigator);
     async function createWallet() {
         //const wallet = CoinKey.createRandom(CoinInfo("dcr").versions);
@@ -68,43 +87,123 @@ const Wallets = () => {
             return;
         }
         updateDecredState('wallets', [...wallets, newWallet]);
-
         toast.success(`New wallet "${newWallet.name}" added to wallets`);
-        //     // Initialize wallet with empty state
-        //     const wallet = {
-        //         state: {
-        //             balanceSats: 0,
-        //             slpUtxos: [],
-        //             nonSlpUtxos: [],
-        //             tokens: new Map(),
-        //             parsedTxHistory: [],
-        //         },
-        //     };
-
-        //     const mnemonic = generateMnemonic()
-        //     // Set wallet mnemonic
-        //     wallet.mnemonic = mnemonic;
-        //     const rootSeedBuffer = await bip39.mnemonicToSeed(mnemonic, '');
-        //     const masterHDNode = utxolib.bip32.fromSeed(
-        //         rootSeedBuffer,
-        //         utxolib.networks.decred,
-        //     );
-        //     console.log('wallet balance: ' + masterHDNode)
-        //     const additionalPaths = []
-        //     const pathsToDerive = [appConfig.derivationPath, ...additionalPaths];
-        //     wallet.paths = new Map();
-        //     for (const path of pathsToDerive) {
-        //         const pathInfo = getPathInfo(masterHDNode, path);
-        //         if (path === appConfig.derivationPath) {
-        //             // Initialize wallet name with first 5 chars of Path1899 address
-        //             wallet.name = pathInfo.address.slice(1, 8);
-        //         }
-        //         wallet.paths.set(path, pathInfo);
-        //     }
-        //    console.log('wallet balance: ' + wallet.state.balanceSats)
     }
+
+    const handleInput = e => {
+        const { name, value } = e.target;
+
+        if (name === 'renamedWalletName') {
+            setFormDataErrors(previous => ({
+                ...previous,
+                [name]: getWalletNameError(value, wallets),
+            }));
+        }
+        if (name === 'walletToBeDeletedName') {
+            const walletToBeDeletedNameError =
+                value === 'delete ' + walletToBeDeleted.name
+                    ? false
+                    : `Input must exactly match "delete ${walletToBeDeleted.name}"`;
+            setFormDataErrors(previous => ({
+                ...previous,
+                [name]: walletToBeDeletedNameError,
+            }));
+        }
+        if (name === 'mnemonic') {
+            setFormDataErrors(previous => ({
+                ...previous,
+                [name]:
+                    validateMnemonic(value) === true
+                        ? false
+                        : 'Invalid mnemonic',
+            }));
+        }
+        setFormData(previous => ({
+            ...previous,
+            [name]: value,
+        }));
+    };
+
+    async function importNewWallet() {
+        // Make sure no existing wallets have this mnemonic
+        const walletInWallets = wallets.find(
+            wallet => wallet.mnemonic === formData.mnemonic,
+        );
+
+        if (typeof walletInWallets !== 'undefined') {
+            // Import error modal
+            console.error(
+                `Cannot import: wallet already exists (name: "${walletInWallets.name}")`,
+            );
+            toast.error(
+                `Cannot import: wallet already exists (name: "${walletInWallets.name}")`,
+            );
+            // Do not clear form data in this case
+            return;
+        }
+
+        // Create a new wallet from mnemonic
+        const newImportedWallet = await createDecredWallet(formData.mnemonic);
+
+        // Handle edge case of another wallet having the same name
+        const existingWalletHasSameName = wallets.find(
+            wallet => wallet.name === newImportedWallet.name,
+        );
+        if (typeof existingWalletHasSameName !== 'undefined') {
+            // Import error modal for wallet existing with the same name
+            console.error(
+                `Cannot import: wallet with same name already exists (name: "${existingWalletHasSameName.name}")`,
+            );
+            toast.error(
+                `Cannot import: wallet with same name already exists (name: "${existingWalletHasSameName.name}")`,
+            );
+            // Do not clear form data in this case
+            return;
+        }
+
+        // Event("Category", "Action", "Label")
+        // Track number of times a different wallet is activated
+        //  Event('Configure.js', 'Create Wallet', 'Imported');
+
+        // Add it to the end of the wallets object
+        updateDecredState('wallets', [...wallets, newImportedWallet]);
+
+        // Import success modal
+        toast.success(
+            `New imported wallet "${newImportedWallet.name}" added to your saved wallets`,
+        );
+
+        // Clear formdata
+        setFormData({ ...formData, mnemonic: '' });
+
+        // Close the modal
+        setShowImportWalletModal(false);
+    }
+
     return (
         <>
+            {showImportWalletModal && (
+                <Modal
+                    height={180}
+                    title={`Import wallet`}
+                    handleOk={importNewWallet}
+                    handleCancel={() => setShowImportWalletModal(false)}
+                    showCancelButton
+                    disabled={
+                        formDataErrors.mnemonic !== false ||
+                        formData.mnemonic === ''
+                    }
+                >
+                    <ModalInput
+                        type="email"
+                        placeholder="mnemonic (seed phrase)"
+                        name="mnemonic"
+                        value={formData.mnemonic}
+                        error={formDataErrors.mnemonic}
+                        handleInput={handleInput}
+                    />
+                </Modal>
+            )}
             <WalletsList title="Wallets">
                 <WalletsPanel>
                     {wallets.map((wallet, index) =>
@@ -185,7 +284,7 @@ const Wallets = () => {
                     </PrimaryButton>
                 </WalletRow>
                 <WalletRow>
-                    <SecondaryButton>
+                    <SecondaryButton onClick={() => setShowImportWalletModal(true)}>
                         Import Wallet
                     </SecondaryButton>
                 </WalletRow>
