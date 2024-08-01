@@ -39,6 +39,7 @@ export const cashtabWalletsFromJSON = storedWallets => {
     for (const storedWallet of storedWallets) {
         wallets.push(cashtabWalletFromJSON(storedWallet));
     }
+    console.log('check wallet list: ' + JSON.stringify(wallets))
     return wallets;
 };
 
@@ -82,10 +83,9 @@ export const cashtabWalletFromJSON = storedCashtabWallet => {
     }
     return {
         ...storedCashtabWallet,
-        paths: new Map(storedCashtabWallet.paths),
+        paths: storedCashtabWallet.paths,
         state: {
             ...storedCashtabWallet.state,
-            tokens: new Map(storedCashtabWallet.state.tokens),
         },
     };
 };

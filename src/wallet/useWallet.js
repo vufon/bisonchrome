@@ -19,7 +19,7 @@ import {
     cashtabWalletsToJSON,
 } from '../utils/helpers';
 import { toast } from 'react-toastify';
-import CashtabState from '../config/CashtabState';
+import DecredState from '../config/DecredState';
 import { getUserLocale } from '../utils/helpers';
 
 const useWallet = () => {
@@ -37,7 +37,7 @@ const useWallet = () => {
     const [aliasServerError, setAliasServerError] = useState(false);
     const [aliasIntervalId, setAliasIntervalId] = useState(null);
     const [chaintipBlockheight, setChaintipBlockheight] = useState(0);
-    const [cashtabState, setCashtabState] = useState(new CashtabState());
+    const [decredState, setDecredState] = useState(new DecredState());
     const locale = getUserLocale();
 
     // Ref https://stackoverflow.com/questions/53446020/how-to-compare-oldvalues-and-newvalues-on-react-hooks-useeffect
@@ -51,9 +51,9 @@ const useWallet = () => {
     };
 
     const prevFiatPrice = usePrevious(fiatPrice);
-    const prevFiatCurrency = usePrevious(cashtabState.settings.fiatCurrency);
+    const prevFiatCurrency = usePrevious(decredState.settings.fiatCurrency);
 
-    const update = async cashtabState => {
+    const update = async decredState => {
         if (!cashtabLoaded) {
             // Wait for cashtab to get state from localforage before updating
             return;
@@ -61,19 +61,19 @@ const useWallet = () => {
     };
 
     /**
-     * Lock UI while you update cashtabState in state and indexedDb
+     * Lock UI while you update decredState in state and indexedDb
      * @param {key} string
      * @param {object} value what is being stored at this key
      * @returns {boolean}
      */
-    const updateCashtabState = async (key, value) => {
+    const updateDecredState = async (key, value) => {
         // If we are dealing with savedWallets, sort alphabetically by wallet name
         if (key === 'savedWallets') {
             value.sort((a, b) => a.name.localeCompare(b.name));
         }
 
         // Update the changed key in state
-        setCashtabState({ ...cashtabState, [`${key}`]: value });
+        setDecredState({ ...decredState, [`${key}`]: value });
 
         // Update the changed key in localforage
 
@@ -85,7 +85,6 @@ const useWallet = () => {
         if (key === 'wallets') {
             value = cashtabWalletsToJSON(value);
         }
-
         // We lock the UI by setting loading to true while we set items in localforage
         // This is to prevent rapid user action from corrupting the db
         setLoading(true);
@@ -107,7 +106,7 @@ const useWallet = () => {
      * We save to localforage on state changes in updateCashtabState
      * so that these persist if the user navigates away from Cashtab     *
      */
-    const loadCashtabState = async () => {
+    const loadDecredState = async () => {
         // cashtabState is initialized with defaults when this component loads
         // settings
         let settings = await localforage.getItem('settings');
@@ -117,11 +116,11 @@ const useWallet = () => {
                 // If a settings object is present but invalid, parse to find and add missing keys
                 settings = migrateLegacyCashtabSettings(settings);
                 // Update localforage on app load only if existing values are in an obsolete format
-                updateCashtabState('settings', settings);
+                updateDecredState('settings', settings);
             }
 
             // Set cashtabState settings to valid localforage or migrated settings
-            cashtabState.settings = settings;
+            decredState.settings = settings;
         }
 
         // cashtabCache
@@ -135,13 +134,13 @@ const useWallet = () => {
 
             if (!isValidCashtabCache(cashtabCache)) {
                 // If a cashtabCache object is present but invalid, nuke it and start again
-                cashtabCache = cashtabState.cashtabCache;
+                cashtabCache = decredState.cashtabCache;
                 // Update localforage on app load only if existing values are in an obsolete format
-                updateCashtabState('cashtabCache', cashtabCache);
+                updateDecredState('cashtabCache', cashtabCache);
             }
 
-            // Set cashtabState cashtabCache to valid localforage or migrated settings
-            cashtabState.cashtabCache = cashtabCache;
+            // Set decredState cashtabCache to valid localforage or migrated settings
+            decredState.cashtabCache = cashtabCache;
         }
 
         // Load wallets if present
@@ -152,7 +151,6 @@ const useWallet = () => {
 
         // After version 1.7.x, Cashtab users have all wallets stored at the wallets key
         let wallets = await localforage.getItem('wallets');
-
         /**
          * Possible cases
          *
@@ -208,7 +206,7 @@ const useWallet = () => {
                 wallets = wallets.concat(savedWallets);
 
                 // Set cashtabState wallets to migrated wallet + savedWallets
-                cashtabState.wallets = wallets;
+                decredState.wallets = wallets;
 
                 // We do not updateCashtabState('wallets', wallets) here
                 // because it will happen in the update routine as soon as
@@ -237,7 +235,7 @@ const useWallet = () => {
 
                 // Set cashtabState wallets to wallets from localforage
                 // (or migrated wallets if localforage included any invalid wallet)
-                cashtabState.wallets = wallets;
+                decredState.wallets = wallets;
 
                 // We do not updateCashtabState('wallets', wallets) here
                 // because it will happen in the update routine as soon as
@@ -247,17 +245,9 @@ const useWallet = () => {
             // So, if we do not find wallets from localforage, cashtabState will be initialized with default
             // wallets []
         }
-        setCashtabState(cashtabState);
+        setDecredState(decredState);
         setCashtabLoaded(true);
-        // Wait for websocket to be connected:
-        await ws.waitForOpen();
-
-        // We always subscribe to blocks
-        ws.subscribeToBlocks();
         // When the user creates or imports a wallet, ws subscriptions will be handled by updateWebsocket
-
-        // Put connected websocket in state
-        setWs(ws);
     };
 
     // With different currency selections possible, need unique intervals for price checks
@@ -286,8 +276,8 @@ const useWallet = () => {
     };
 
     const fetchXecPrice = async (
-        fiatCode = typeof cashtabState?.settings?.fiatCurrency !== 'undefined'
-            ? cashtabState.settings.fiatCurrency
+        fiatCode = typeof decredState?.settings?.fiatCurrency !== 'undefined'
+            ? decredState.settings.fiatCurrency
             : 'usd',
     ) => {
         // Split this variable out in case coingecko changes
@@ -318,7 +308,7 @@ const useWallet = () => {
     };
 
     const cashtabBootup = async () => {
-        await loadCashtabState();
+        await loadDecredState();
     };
 
     useEffect(() => {
@@ -328,14 +318,14 @@ const useWallet = () => {
     // Call the update loop every time the user changes the active wallet
     // and immediately after cashtab is loaded
     useEffect(() => {
-        if (cashtabLoaded !== true || cashtabState.wallets.length === 0) {
+        if (cashtabLoaded !== true || decredState.wallets.length === 0) {
             // Do not update the active wallet unless
             // 1. Cashtab is loaded
             // 2. You have a valid active wallet in cashtabState
             return;
         }
-        update(cashtabState);
-    }, [cashtabLoaded, cashtabState.wallets[0]?.name]);
+        update(decredState);
+    }, [cashtabLoaded, decredState.wallets[0]?.name]);
 
     // Clear price API and update to new price API when fiat currency changes
     useEffect(() => {
@@ -346,8 +336,8 @@ const useWallet = () => {
         // Clear existing fiat price API check
         clearFiatPriceApi(checkFiatInterval);
         // Reset fiat price API when fiatCurrency setting changes
-        initializeFiatPriceApi(cashtabState.settings.fiatCurrency);
-    }, [cashtabLoaded, cashtabState.settings.fiatCurrency]);
+        initializeFiatPriceApi(decredState.settings.fiatCurrency);
+    }, [cashtabLoaded, decredState.settings.fiatCurrency]);
 
     /**
      * useEffect
@@ -358,7 +348,7 @@ const useWallet = () => {
      */
     useEffect(() => {
         // Do nothing if the user has just changed the fiat currency
-        if (cashtabState.settings.fiatCurrency !== prevFiatCurrency) {
+        if (decredState.settings.fiatCurrency !== prevFiatCurrency) {
             return;
         }
 
@@ -373,7 +363,7 @@ const useWallet = () => {
         ];
         if (
             !FIAT_CHANGE_SUPPORTED_CURRENCIES.includes(
-                cashtabState.settings.fiatCurrency,
+                decredState.settings.fiatCurrency,
             )
         ) {
             return;
@@ -393,9 +383,9 @@ const useWallet = () => {
                 toast(
                     `XEC is now ${
                         supportedFiatCurrencies[
-                            cashtabState.settings.fiatCurrency
+                            decredState.settings.fiatCurrency
                         ].symbol
-                    }${fiatPrice} ${cashtabState.settings.fiatCurrency.toUpperCase()}`,
+                    }${fiatPrice} ${decredState.settings.fiatCurrency.toUpperCase()}`,
                     { icon: CashReceivedNotificationIcon },
                 );
             }
@@ -407,7 +397,7 @@ const useWallet = () => {
                 });
             }
         }
-    }, [fiatPrice, cashtabState.settings.fiatCurrency]);
+    }, [fiatPrice, decredState.settings.fiatCurrency]);
 
     // Update websocket subscriptions and websocket onMessage handler whenever
     // 1. cashtabState changes
@@ -419,7 +409,7 @@ const useWallet = () => {
         if (
             cashtabLoaded !== true ||
             ws === null ||
-            typeof cashtabState.wallets[0] === 'undefined'
+            typeof decredState.wallets[0] === 'undefined'
         ) {
             // Only update the websocket if
             // 1. ws is not null
@@ -429,14 +419,14 @@ const useWallet = () => {
             // We can call with fiatPrice of null, we will not always have fiatPrice
             return;
         }
-    }, [cashtabState, fiatPrice, ws, cashtabLoaded]);
+    }, [decredState, fiatPrice, ws, cashtabLoaded]);
 
     useEffect(() => {
         if (
             aliases?.pending?.length > 0 &&
             aliasIntervalId === null &&
-            typeof cashtabState.wallets !== 'undefined' &&
-            cashtabState.wallets.length > 0
+            typeof decredState.wallets !== 'undefined' &&
+            decredState.wallets.length > 0
         ) {
             // If
             // 1) aliases are enabled in Cashtab
@@ -448,7 +438,7 @@ const useWallet = () => {
             // If we have no pending aliases but we still have an interval to check them, clearInterval
             clearInterval(aliasIntervalId);
         }
-    }, [cashtabState.wallets[0]?.name, aliases]);
+    }, [decredState.wallets[0]?.name, aliases]);
 
     return {
         chaintipBlockheight,
@@ -462,8 +452,8 @@ const useWallet = () => {
         setAliasServerError,
         aliasPrices,
         setAliasPrices,
-        updateCashtabState,
-        cashtabState,
+        updateDecredState,
+        decredState,
     };
 };
 

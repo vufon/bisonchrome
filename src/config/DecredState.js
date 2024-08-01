@@ -11,7 +11,7 @@
 import { CashtabSettings } from './cashtabSettings';
 import CashtabCache from './CashtabCache';
 
-class CashtabState {
+class DecredState {
     constructor(
         contactList = [],
         cashtabCache = new CashtabCache(),
@@ -25,4 +25,4 @@ class CashtabState {
     }
 }
 
-export default CashtabState;
+export default DecredState;

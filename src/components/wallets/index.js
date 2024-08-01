@@ -30,10 +30,12 @@ import * as bip39 from 'bip39';
 import * as randomBytes from 'randombytes';
 import * as utxolib from '@trezor/utxo-lib';
 import appConfig from '../../config/app';
-import CoinKey from 'coinkey';
-import CoinInfo from 'coininfo';
 import { encode, decode } from '../../address/dcraddr'
-import HDKey from 'hdkey';
+import { createDecredWallet } from '../../wallet/index'
+import { WalletContext } from '../../wallet/context';
+import { toast } from 'react-toastify';
+import { toFormattedXec } from '../../utils/formatting';
+import { getUserLocale } from '../../utils/helpers';
 
 export const generateMnemonic = () => {
     const mnemonic = bip39.generateMnemonic(
@@ -50,7 +52,6 @@ const getPathInfo = (masterHDNode, abbreviatedDerivationPath) => {
     const node = masterHDNode.derivePath(fullDerivationPath);
     const address = encode('P2PKH', node.identifier);
     const { hash } = decode(address, true);
-    console.log('address: ' + address)
     return {
         hash,
         address,
@@ -59,21 +60,30 @@ const getPathInfo = (masterHDNode, abbreviatedDerivationPath) => {
 };
 
 const Wallets = () => {
+    const ContextValue = React.useContext(WalletContext);
+    const { updateDecredState, decredState } = ContextValue;
+    const { wallets } = decredState;
+    const userLocale = getUserLocale(navigator);
     async function createWallet() {
         //const wallet = CoinKey.createRandom(CoinInfo("dcr").versions);
         const mnemonic = generateMnemonic()
-        console.log('mnemonic: ' + mnemonic)
-        // Convert the mnemonic to a seed
-        const seed = bip39.mnemonicToSeedSync(mnemonic);
-        // Create an HD wallet key from the seed
-        const hdKey = HDKey.fromMasterSeed(Buffer.from(seed, "hex"));
-        // Define the BIP44 path for Bitcoin (m/44'/0'/0'/0/0)
-        const path = "m/44'/42'/0'/0/0";
-        // Derive a child key from the HD key using the defined path
-        const child = hdKey.derive(path);
-        const coinKey = new CoinKey(child.privateKey, CoinInfo("dcr").versions)
-        console.log('address: ' + coinKey.publicAddress)
-        console.log('privateKey: ' + coinKey.privateKey.toString("hex"))
+        console.log(JSON.stringify(wallets))
+        const newWallet = await createDecredWallet(mnemonic)
+        const walletAlreadyInWalletsSomehow = wallets.find(
+            wallet =>
+                wallet.name === newWallet.name ||
+                wallet.mnemonic === newWallet.mnemonic,
+        );
+        if (typeof walletAlreadyInWalletsSomehow !== 'undefined') {
+            toast.error(
+                `By a vanishingly small chance, "${newAddedWallet.name}" already existed in saved wallets. Please try again.`,
+            );
+            // Do not add this wallet
+            return;
+        }
+        updateDecredState('wallets', [...wallets, newWallet]);
+
+        toast.success(`New wallet "${newWallet.name}" added to wallets`);
         //     // Initialize wallet with empty state
         //     const wallet = {
         //         state: {
@@ -111,68 +121,77 @@ const Wallets = () => {
         <>
             <WalletsList title="Wallets">
                 <WalletsPanel>
-                    <WalletRow key={`account1_0`}>
-                        <ActiveWalletName className="notranslate">
-                            {"Account1"}
-                        </ActiveWalletName>
-                        <h4>(active)</h4>
-                        <SvgButtonPanel>
-                            <CopyIconButton
-                                name={`Copy address of Account1`}
-                                data={"DsbnXmY5yud8MwenFQJEfabQfZDedakeuwY"}
-                                showToast
-                            />
-                            <IconButton
-                                name={`Rename Account1`}
-                                icon={<EditIcon />}
-                            />
-                            <IconButton
-                                name={`Add Account1 to contacts`}
-                                icon={<AddContactIcon />}
-                            />
-                        </SvgButtonPanel>
-                    </WalletRow>
-
-                    <Wallet key={`account2_1`}>
-                        <WalletRow>
-                            <WalletName>
-                                <h3 className="overflow notranslate">
-                                    {"Account2"}
-                                </h3>
-                            </WalletName>
-                            <WalletBalance>
-                                {"25.7 DCR"}
-                            </WalletBalance>
-                        </WalletRow>
-                        <ActionsRow>
-                            <ButtonPanel>
+                    {wallets.map((wallet, index) =>
+                        index === 0 ? (
+                            <WalletRow key={`${wallet.name}_${index}`}>
+                                <ActiveWalletName className="notranslate">
+                                    {wallet.name}
+                                </ActiveWalletName>
+                                <h4>(active)</h4>
                                 <SvgButtonPanel>
                                     <CopyIconButton
-                                        name={`Copy address of Account2`}
-                                        data={"DsbnXmY5yud8MwenFQJEfabQfZDedakeuwY"}
+                                        name={`Copy address of ${wallet.name}`}
+                                        data={wallet.paths[42].address}
                                         showToast
                                     />
                                     <IconButton
-                                        name={`Rename Account2`}
+                                        name={`Rename ${wallet.name}`}
                                         icon={<EditIcon />}
                                     />
                                     <IconButton
-                                        name={`Add Account2 to contacts`}
+                                        name={`Add ${wallet.name} to contacts`}
                                         icon={<AddContactIcon />}
                                     />
-                                    <IconButton
-                                        name={`Delete Account2`}
-                                        icon={<TrashcanIcon />}
-                                    />
                                 </SvgButtonPanel>
-                                <ActivateButton
-                                    aria-label={`Activate Account2`}
-                                >
-                                    Activate
-                                </ActivateButton>
-                            </ButtonPanel>
-                        </ActionsRow>
-                    </Wallet>
+                            </WalletRow>
+                        ) : (
+                            <Wallet key={`${wallet.name}_${index}`}>
+                                <WalletRow>
+                                    <WalletName>
+                                        <h3 className="overflow notranslate">
+                                            {wallet.name}
+                                        </h3>
+                                    </WalletName>
+                                    <WalletBalance>
+                                        {wallet?.state?.balanceSats !== 0
+                                            ? `${toFormattedXec(
+                                                wallet.state.balanceSats,
+                                                userLocale,
+                                            )} DCR`
+                                            : '-'}
+                                    </WalletBalance>
+                                </WalletRow>
+                                <ActionsRow>
+                                    <ButtonPanel>
+                                        <SvgButtonPanel>
+                                            <CopyIconButton
+                                                name={`Copy address of ${wallet.name}`}
+                                                data={wallet.paths[42].address}
+                                                showToast
+                                            />
+                                            <IconButton
+                                                name={`Rename ${wallet.name}`}
+                                                icon={<EditIcon />}
+                                            />
+                                            <IconButton
+                                                name={`Add Account2 to contacts`}
+                                                icon={<AddContactIcon />}
+                                            />
+                                            <IconButton
+                                                name={`Delete ${wallet.name}`}
+                                                icon={<TrashcanIcon />}
+                                            />
+                                        </SvgButtonPanel>
+                                        <ActivateButton
+                                            aria-label={`Activate ${wallet.name}`}
+                                        >
+                                            Activate
+                                        </ActivateButton>
+                                    </ButtonPanel>
+                                </ActionsRow>
+                            </Wallet>
+                        ),
+                    )}
                 </WalletsPanel>
                 <WalletRow>
                     <PrimaryButton onClick={() => createWallet()}>

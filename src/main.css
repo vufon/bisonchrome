@@ -14,12 +14,12 @@
 }
 .app {
     width: 500px;
-    height: 800px;
     min-height: calc(-80px + 100vh);
     background-color: var(--primaryColor);
     font-size: calc(10px + 2vmin);
     color: var(--primaryAccent);
     padding: 10px;
+    padding-bottom: 80px;
     font-family: "Inter", sans-serif;
 }
 /* Utility classes */
