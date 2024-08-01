@@ -46,19 +46,6 @@ export const generateMnemonic = () => {
     return mnemonic;
 };
 
-const getPathInfo = (masterHDNode, abbreviatedDerivationPath) => {
-    const fullDerivationPath = `m/44'/${abbreviatedDerivationPath}'/0'/0/0`;
-    console.log('check devivation path : ' + fullDerivationPath)
-    const node = masterHDNode.derivePath(fullDerivationPath);
-    const address = encode('P2PKH', node.identifier);
-    const { hash } = decode(address, true);
-    return {
-        hash,
-        address,
-        wif: node.toWIF(),
-    };
-};
-
 const Wallets = () => {
     const ContextValue = React.useContext(WalletContext);
     const { updateDecredState, decredState } = ContextValue;
@@ -67,7 +54,6 @@ const Wallets = () => {
     async function createWallet() {
         //const wallet = CoinKey.createRandom(CoinInfo("dcr").versions);
         const mnemonic = generateMnemonic()
-        console.log(JSON.stringify(wallets))
         const newWallet = await createDecredWallet(mnemonic)
         const walletAlreadyInWalletsSomehow = wallets.find(
             wallet =>

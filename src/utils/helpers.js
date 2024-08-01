@@ -39,7 +39,6 @@ export const cashtabWalletsFromJSON = storedWallets => {
     for (const storedWallet of storedWallets) {
         wallets.push(cashtabWalletFromJSON(storedWallet));
     }
-    console.log('check wallet list: ' + JSON.stringify(wallets))
     return wallets;
 };
 
@@ -88,4 +87,16 @@ export const cashtabWalletFromJSON = storedCashtabWallet => {
             ...storedCashtabWallet.state,
         },
     };
+};
+
+export const getWalletState = wallet => {
+    if (!wallet || !wallet.state) {
+        return {
+            balanceSats: 0,
+            Utxos: [],
+            parsedTxHistory: [],
+        };
+    }
+
+    return wallet.state;
 };

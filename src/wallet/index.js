@@ -40,7 +40,7 @@ export const toSatoshis = xecAmount => {
  * @param {Integer} satoshis
  * @returns {Number}
  */
-export const toXec = satoshis => {
+export const toDCR = satoshis => {
     if (!Number.isInteger(satoshis)) {
         throw new Error('Input param satoshis must be an integer');
     }
@@ -79,4 +79,29 @@ const getPathInfo = (hdKey, abbreviatedDerivationPath) => {
         address: coinKey.publicAddress,
         wif: coinKey.privateWif,
     };
+};
+
+export const getWalletsForNewActiveWallet = (walletToActivate, wallets) => {
+    // Clone wallets so we do not mutate the app's wallets array
+    const currentWallets = [...wallets];
+    // Find this wallet in wallets
+    const indexOfWalletToActivate = currentWallets.findIndex(
+        wallet => wallet.mnemonic === walletToActivate.mnemonic,
+    );
+
+    if (indexOfWalletToActivate === -1) {
+        // should never happen
+        throw new Error(
+            `Error activating "${walletToActivate.name}": Could not find wallet in wallets`,
+        );
+    }
+
+    // Remove walletToActivate from currentWallets
+    currentWallets.splice(indexOfWalletToActivate, 1);
+
+    // Sort inactive wallets alphabetically by name
+    currentWallets.sort((a, b) => a.name.localeCompare(b.name));
+
+    // Put walletToActivate at 0-index
+    return [walletToActivate, ...currentWallets];
 };

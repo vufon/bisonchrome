@@ -3,7 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 import { BN } from 'slp-mdm';
-import { toXec, toSatoshis } from '../wallet';
+import { toDCR, toSatoshis } from '../wallet';
 import * as bip39 from 'bip39';
 import {
     CashtabSettings,
@@ -122,14 +122,14 @@ export const isValidXecSendAmount = (
         return 'Amount must be greater than 0';
     }
     if (sendAmountSatoshis < appConfig.dustSats) {
-        return `Send amount must be at least ${toXec(appConfig.dustSats)} ${
+        return `Send amount must be at least ${toDCR(appConfig.dustSats)} ${
             appConfig.ticker
         }`;
     }
     if (sendAmountSatoshis > balanceSats) {
-        return `Amount ${toXec(sendAmountSatoshis).toLocaleString(userLocale, {
+        return `Amount ${toDCR(sendAmountSatoshis).toLocaleString(userLocale, {
             minimumFractionDigits: appConfig.cashDecimals,
-        })} ${appConfig.ticker} exceeds wallet balance of ${toXec(
+        })} ${appConfig.ticker} exceeds wallet balance of ${toDCR(
             balanceSats,
         ).toLocaleString(userLocale, { minimumFractionDigits: 2 })} ${
             appConfig.ticker
@@ -403,11 +403,7 @@ export const isValidCashtabWallet = wallet => {
     if (!('paths' in wallet)) {
         return false;
     }
-    if (Array.isArray(wallet.paths)) {
-        // wallet.paths should be a map
-        return false;
-    }
-    if (wallet.paths.size < 1) {
+    if (Object.keys(wallet.paths).length < 1) {
         // Wallet must have at least one path info object
         return false;
     }
@@ -417,19 +413,16 @@ export const isValidCashtabWallet = wallet => {
     // Return false if we do not have Path1899
     // This also handles the case of a JSON-activated pre-2.9.0 wallet
 
-    if (typeof wallet.paths.get(1899) === 'undefined') {
+    if (typeof wallet.paths[42] === 'undefined') {
         return false;
     }
-    wallet.paths.forEach((value, key) => {
-        if (typeof key !== 'number') {
-            // Wallet is invalid if key is not a number
-            pathsValid = false;
-        }
-        if (!('hash' in value) || !('address' in value) || !('wif' in value)) {
+    for(var key in wallet.paths) {
+        const value = wallet.paths[key]
+        if (!('address' in value) || !('wif' in value)) {
             // If any given path does not have all of these keys, the wallet is invalid
             pathsValid = false;
-        }
-    });
+        } 
+    }
     if (!pathsValid) {
         // Invalid path
         return false;
@@ -439,18 +432,10 @@ export const isValidCashtabWallet = wallet => {
         'state' in wallet &&
         'mnemonic' in wallet &&
         'name' in wallet &&
-        !('Path145' in wallet) &&
-        !('Path245' in wallet) &&
-        !('Path1899' in wallet) &&
         typeof wallet.state === 'object' &&
         'balanceSats' in wallet.state &&
         typeof wallet.state.balanceSats === 'number' &&
-        !('balances' in wallet.state) &&
-        'slpUtxos' in wallet.state &&
-        'nonSlpUtxos' in wallet.state &&
-        'tokens' in wallet.state &&
-        !('hydratedUtxoDetails' in wallet.state) &&
-        !('slpBalancesAndUtxos' in wallet.state)
+        'Utxos' in wallet.state
     );
 };
 

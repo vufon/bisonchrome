@@ -1,3 +1,4 @@
+import React from 'react';
 import './main.css';
 import './static/css/bootstrap/bootstrap.min.css';
 import './static/js/bootstrap/bootstrap.bundle.min.js';
@@ -9,6 +10,13 @@ import Wallets from "./components/wallets/index.js"
 import styled, { css, ThemeProvider } from 'styled-components';
 import { theme } from './static/js/styles/theme.js';
 import BalanceArea from "./components/BalanceArea";
+import { getWalletState } from './utils/helpers.js';
+import { isValidCashtabWallet } from './validation/index.js'
+import Spinner from './components/common/Spinner.js';
+import { LoadingCtn } from './components/common/Atoms';
+import { CashtabNotification } from './components/app/styles.js'
+import { Bounce } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.min.css';
 import {
   HomeIcon,
   SendIcon,
@@ -26,6 +34,8 @@ import {
 } from './components/common/CustomIcons';
 import BackupWallet from './components/backupwallet/BackupWallet.js';
 import Configure from './components/configure/Configure.js';
+import { WalletContext } from './wallet/context';
+
 export const NavButton = styled.button`
     :focus,
     :active {
@@ -94,9 +104,15 @@ export const Footer = styled.div`
 `;
 
 function App() {
+  const ContextValue = React.useContext(WalletContext);
+  const { updateDecredState, decredState, cashtabLoaded, loading } = ContextValue;
+  const { wallets, settings, } = decredState;
+  const wallet = wallets.length > 0 ? wallets[0] : false;
+  const walletState = getWalletState(wallet);
   const [page, setPage] = useState('home')
   const [navMenuClicked, setNavMenuClicked] = useState(false);
   const handleNavMenuClick = () => setNavMenuClicked(!navMenuClicked);
+  const validWallet = isValidCashtabWallet(wallet);
 
   const openNewTab = () => {
     window.open(`index.html`);
@@ -104,6 +120,19 @@ function App() {
 
   return (
     <ThemeProvider theme={theme}>
+      <CashtabNotification
+        position="top-right"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+        transition={Bounce}
+      />
       <div className="app">
         <div className="container">
           <div class="top-banner d-flex justify-content-between">
@@ -111,25 +140,39 @@ function App() {
             <img src="/images/logo.png" alt="cashtab" class="main-logo" />
             <img src="/images/popout.svg" alt="Open in tab" width="25" height="25" onClick={openNewTab} class="cursor-pointer" />
           </div>
-          <BalanceArea />
-          {page === 'home' &&
-            <Home />
-          }
-          {page === 'send' &&
-            <SendDCR />
-          }
-          {page === 'receive' &&
-            <ReceiveDCR />
-          }
-          {page === 'wallets' &&
-            <Wallets />
-          }
-          {page === 'backup' &&
-            <BackupWallet />
-          }
-          {page === 'configure' &&
-            <Configure />
-          }
+          {loading || (wallet !== false && !validWallet && <Spinner />)}
+          {!cashtabLoaded ? (
+            <LoadingCtn title="Wallet Power Loading" />
+          ) : (
+            <>
+              <BalanceArea
+                wallets={wallets}
+                settings={settings}
+                updateDecredState={
+                  updateDecredState
+                }
+                userLocale={navigator.language}
+              />
+              {page === 'home' &&
+                <Home />
+              }
+              {page === 'send' &&
+                <SendDCR />
+              }
+              {page === 'receive' &&
+                <ReceiveDCR />
+              }
+              {page === 'wallets' &&
+                <Wallets />
+              }
+              {page === 'backup' &&
+                <BackupWallet />
+              }
+              {page === 'configure' &&
+                <Configure />
+              }
+            </>
+          )}
         </div>
       </div>
       <Footer>
