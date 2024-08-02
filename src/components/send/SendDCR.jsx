@@ -116,7 +116,7 @@ const InputModesHolder = styled.div`
     }
 `;
 
-const SendDCR = () => {
+const SendDCR = ({ addressInput = '' }) => {
   const emptyFormData = {
     amount: '',
     address: '',
@@ -125,9 +125,11 @@ const SendDCR = () => {
     cashtabMsg: '',
     opReturnRaw: '',
   };
+  const tempFormData = emptyFormData
+  tempFormData.address = addressInput
   const [isOneToManyXECSend, setIsOneToManyXECSend] = useState(false);
   const [txInfoFromUrl, setTxInfoFromUrl] = useState(false);
-  const [formData, setFormData] = useState(emptyFormData);
+  const [formData, setFormData] = useState(tempFormData);
   const [sendAddressError, setSendAddressError] = useState(false);
   const [selectedCurrency, setSelectedCurrency] = useState(appConfig.ticker);
   const [sendAmountError, setSendAmountError] = useState(false);

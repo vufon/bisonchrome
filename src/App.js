@@ -1,8 +1,7 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import './main.css';
 import './static/css/bootstrap/bootstrap.min.css';
 import './static/js/bootstrap/bootstrap.bundle.min.js';
-import { useState, useEffect } from "react";
 import Home from "./components/Home";
 import SendDCR from "./components/send/SendDCR.jsx";
 import ReceiveDCR from "./components/receive/ReceiveDCR.jsx";
@@ -16,6 +15,7 @@ import Spinner from './components/common/Spinner.js';
 import { LoadingCtn } from './components/common/Atoms';
 import { CashtabNotification } from './components/app/styles.js'
 import { Bounce } from 'react-toastify';
+import Contacts from './components/contacts';
 import 'react-toastify/dist/ReactToastify.min.css';
 import {
   HomeIcon,
@@ -28,8 +28,6 @@ import {
   WalletIcon,
   BankIcon,
   ContactsIcon,
-  AirdropIcon,
-  RewardIcon,
   SettingsIcon,
 } from './components/common/CustomIcons';
 import BackupWallet from './components/backupwallet/BackupWallet.js';
@@ -110,9 +108,15 @@ function App() {
   const wallet = wallets.length > 0 ? wallets[0] : false;
   const walletState = getWalletState(wallet);
   const [page, setPage] = useState('home')
+  const [sendAddress, setSendAddress] = useState('');
   const [navMenuClicked, setNavMenuClicked] = useState(false);
   const handleNavMenuClick = () => setNavMenuClicked(!navMenuClicked);
   const validWallet = isValidCashtabWallet(wallet);
+
+  const setSendPage = async (address) => {
+    setSendAddress(address)
+    setPage('send')
+  }
 
   const openNewTab = () => {
     window.open(`index.html`);
@@ -157,7 +161,7 @@ function App() {
                 <Home />
               }
               {page === 'send' &&
-                <SendDCR />
+                <SendDCR addressInput={sendAddress}/>
               }
               {page === 'receive' &&
                 <ReceiveDCR />
@@ -167,6 +171,9 @@ function App() {
               }
               {page === 'backup' &&
                 <BackupWallet />
+              }
+              {page === 'contacts' &&
+                <Contacts setSendPage={setSendPage} />
               }
               {page === 'configure' &&
                 <Configure />
@@ -225,6 +232,14 @@ function App() {
               {' '}
               <p>Wallet Backup</p>
               <WalletIcon />
+            </NavItem>
+            <NavItem
+              active={location.pathname === '/contacts'}
+              onClick={() => setPage('contacts')}
+            >
+              {' '}
+              <p>Contacts</p>
+              <ContactsIcon />
             </NavItem>
             <NavItem
               active={

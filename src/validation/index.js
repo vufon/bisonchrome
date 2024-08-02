@@ -504,6 +504,19 @@ export const getContactNameError = (name, contacts) => {
     return false;
 };
 
+export const getContactAddressError = (address, contacts) => {
+    //TODO: Check valid address
+    // We do not accept prefixless input
+    for (const contact of contacts) {
+        if (contact.address === address) {
+            return `${address.slice(6, 9)}...${address.slice(
+                -3,
+            )} already in Contacts`;
+        }
+    }
+    return false;
+};
+
 /**
  * Check if an array is a valid Cashtab contact list
  * A valid contact list is an array of objects
