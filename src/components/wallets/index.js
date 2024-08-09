@@ -28,9 +28,6 @@ import {
 } from './styles';
 import * as bip39 from 'bip39';
 import * as randomBytes from 'randombytes';
-import * as utxolib from '@trezor/utxo-lib';
-import appConfig from '../../config/app';
-import { encode, decode } from '../../address/dcraddr'
 import { createDecredWallet, getWalletsForNewActiveWallet } from '../../wallet/index'
 import { WalletContext } from '../../wallet/context';
 import { toast } from 'react-toastify';
@@ -75,8 +72,7 @@ const Wallets = () => {
     const userLocale = getUserLocale(navigator);
     async function createWallet() {
         //const wallet = CoinKey.createRandom(CoinInfo("dcr").versions);
-        const mnemonic = generateMnemonic()
-        const newWallet = await createDecredWallet(mnemonic)
+        const newWallet = await createDecredWallet()
         const walletAlreadyInWalletsSomehow = wallets.find(
             wallet =>
                 wallet.name === newWallet.name ||

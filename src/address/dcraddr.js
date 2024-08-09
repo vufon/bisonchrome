@@ -144,7 +144,6 @@ export const encode = (type, hash) => {
         payloadData,
         checksumToUint5Array(polymod(checksumData)),
     );
-    console.log(ebase32(payload))
     return ebase32(payload)
 }
 

@@ -1,10 +1,7 @@
 import { BN } from 'slp-mdm';
-import CoinKey from 'coinkey';
-import CoinInfo from 'coininfo';
-import HDKey from 'hdkey';
 import appConfig from '../config/app'
-import { NetWorkType, NetWorkPostFix, DerivationPath } from '../utils/const'
-import * as bip39 from 'bip39';
+import { NetWorkType, DerivationPath, NetWorkName } from '../utils/const'
+import * as Decred from 'decredjs-lib'
 
 const SATOSHIS_PER_XEC = 100;
 const STRINGIFIED_INTEGER_REGEX = /^[0-9]+$/;
@@ -48,7 +45,7 @@ export const toDCR = satoshis => {
     return new BN(satoshis).div(SATOSHIS_PER_XEC).toNumber();
 };
 
-export const createDecredWallet = async (mnemonic, additionalPaths = []) => {
+export const createDecredWallet = async (mnemonicWords) => {
     // Initialize wallet with empty state
     const wallet = {
         state: {
@@ -57,39 +54,44 @@ export const createDecredWallet = async (mnemonic, additionalPaths = []) => {
             parsedTxHistory: [],
         },
     };
+    var mnemonicObj
+    //create Decred mnemonic
+    if (mnemonicWords) {
+        mnemonicObj = Decred.Mnemonic(mnemonicWords)
+    } else {
+        mnemonicObj = Decred.Mnemonic()
+    }
+
+    if (!mnemonicObj || !mnemonicObj.phrase) {
+        throw new Error(
+            `Error mnemonic: Create mnemonic failed`,
+        );
+    }
+
     // Set wallet mnemonic
-    wallet.mnemonic = mnemonic;
-    // Convert the mnemonic to a seed
-    const seed = bip39.mnemonicToSeedSync(mnemonic);
-    // Create an HD wallet key from the seed
-    const hdKey = HDKey.fromMasterSeed(Buffer.from(seed, "hex"));
-    const pathInfo = getPathInfo(hdKey, DerivationPath());
+    wallet.mnemonic = mnemonicObj.phrase;
+    const fullDerivationPath = `m/44'/${DerivationPath()}'/0'/0/0`;
+    // Derive a child key from the HD key using the defined path
+    const child = mnemonicObj.toHDPrivateKey(getNetworkName()).derive(fullDerivationPath)
+    const pathInfo = {
+        address: child.publicKey.toAddress().toString(),
+        privateKey: child.privateKey.toString(),
+        publicKey: child.publicKey.toString(),
+        wif: child.privateKey.toWIF(),
+    }
     wallet.name = pathInfo.address.slice(0, 6);
     const pathMap = {};
-    pathMap[appConfig.derivationPath] = pathInfo
+    pathMap[DerivationPath()] = pathInfo
     wallet.paths = pathMap;
     return wallet;
 }
 
-const getPathInfo = (hdKey, abbreviatedDerivationPath) => {
-    const fullDerivationPath = `m/44'/${abbreviatedDerivationPath}'/0'/0/0`;
-    // Derive a child key from the HD key using the defined path
-    const child = hdKey.derive(fullDerivationPath);
-    const coinKey = new CoinKey(child.privateKey, CoinInfo("dcr" + getCoinTypePostfix()).versions)
-    return {
-        address: coinKey.publicAddress,
-        wif: coinKey.privateWif,
-    };
-};
-
-const getCoinTypePostfix = () => {
+const getNetworkName = () => {
     switch (appConfig.network) {
         case NetWorkType.Testnet:
-            return NetWorkPostFix.TestPostFix;
-        case NetWorkType.Simnet:
-            return NetWorkPostFix.SimPostFix;
+            return NetWorkName.TestnetName;
         default:
-            return NetWorkPostFix.MainPostFix;
+            return NetWorkName.MainnetName;
     }
 }
 
