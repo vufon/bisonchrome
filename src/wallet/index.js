@@ -3,8 +3,15 @@ import CoinKey from 'coinkey';
 import CoinInfo from 'coininfo';
 import HDKey from 'hdkey';
 import appConfig from '../config/app'
-import { NetWorkType, NetWorkPostFix, DerivationPath } from '../utils/const'
+import { NetWorkType, NetWorkPostFix, DerivationPath, NetworkInfo } from '../utils/const'
 import * as bip39 from 'bip39';
+import { payments } from 'bitcoinjs-lib';
+import { Buffer } from 'safe-buffer';
+import fromSeed from 'bip32'
+import typeforce from 'typeforce';
+import types from '../utils/types';
+import createHmac from 'create-hmac';
+import { BigInteger } from 'bigi';
 
 const SATOSHIS_PER_XEC = 100;
 const STRINGIFIED_INTEGER_REGEX = /^[0-9]+$/;
@@ -57,18 +64,77 @@ export const createDecredWallet = async (mnemonic, additionalPaths = []) => {
             parsedTxHistory: [],
         },
     };
+
+    //test with seed
+    console.log(BIP44(mnemonic))
+
     // Set wallet mnemonic
     wallet.mnemonic = mnemonic;
     // Convert the mnemonic to a seed
     const seed = bip39.mnemonicToSeedSync(mnemonic);
     // Create an HD wallet key from the seed
     const hdKey = HDKey.fromMasterSeed(Buffer.from(seed, "hex"));
+    const child = hdKey.derive(`m/44'/${DerivationPath()}'/0'/0/0`);
     const pathInfo = getPathInfo(hdKey, DerivationPath());
     wallet.name = pathInfo.address.slice(0, 6);
     const pathMap = {};
-    pathMap[appConfig.derivationPath] = pathInfo
+    pathMap[DerivationPath()] = pathInfo
     wallet.paths = pathMap;
     return wallet;
+}
+
+export const fromSeed = (seed) => {
+    const network = getNetwork()
+
+}
+
+export const fromSeedHex = (hex, network) => {
+
+}
+
+const MASTER_SECRET = Buffer.from('Bitcoin seed', 'utf8')
+
+export const fromSeedBuffer = (seed, network) => {
+    typeforce(types.tuple(types.Buffer, types.maybe(types.Network)), arguments)
+    if (seed.length < 16) return
+    if (seed.length > 64) return
+
+    var I = createHmac('sha512', MASTER_SECRET).update(seed).digest()
+    var IL = I.slice(0, 32)
+    var IR = I.slice(32)
+
+    // In case IL is 0 or >= n, the master key is invalid
+    // This is handled by the ECPair constructor
+    var pIL = BigInteger .fromBuffer(IL)
+    var keyPair = new ECPair(pIL, null, {
+        network: network
+    })
+
+    return HDNode(keyPair, IR)
+}
+
+export const HDNode = (keyPair, chainCode) => {
+    typeforce(types.tuple('ECPair', types.Buffer256bit), arguments)
+    if (!keyPair.compressed) return
+    return {
+        keyPair: keyPair,
+        chainCode: chainCode,
+        depth: 0,
+        index: 0,
+        parentFingerprint: 0x00000000,
+        derivationCache: {},
+    }
+}
+
+export const getNetwork = () => {
+    switch (appConfig.network) {
+        case NetWorkType.Testnet:
+            return NetworkInfo.decredTest;
+        case NetWorkType.Simnet:
+            return NetworkInfo.decredSim;
+        default:
+            return NetworkInfo.decred;
+    }
 }
 
 const getPathInfo = (hdKey, abbreviatedDerivationPath) => {

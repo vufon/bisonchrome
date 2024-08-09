@@ -7,7 +7,7 @@ const appConfig = {
     name: 'Decred',
     ticker: 'DCR',
     derivationPath: 42,
-    testDerivationPath: 1,
+    testDerivationPath: 42,
     network: 'mainnet',
     logo: mainLogo,
     legacyPrefix: 'decred',

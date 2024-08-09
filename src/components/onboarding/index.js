@@ -12,6 +12,7 @@ import Modal from '../common/Modal';
 import { ModalInput } from '../common/Inputs';
 import { createDecredWallet } from '../../wallet';
 import { generateMnemonic } from '../wallets';
+import { DerivationPath } from '../../utils/const';
 
 const OnBoarding = () => {
     const ContextValue = React.useContext(WalletContext);
