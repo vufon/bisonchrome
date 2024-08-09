@@ -6,6 +6,7 @@ import Home from "./components/Home";
 import SendDCR from "./components/send/SendDCR.jsx";
 import ReceiveDCR from "./components/receive/ReceiveDCR.jsx";
 import Wallets from "./components/wallets/index.js"
+import OnBoarding from './components/onboarding/index.js';
 import styled, { css, ThemeProvider } from 'styled-components';
 import { theme } from './static/js/styles/theme.js';
 import BalanceArea from "./components/BalanceArea";
@@ -149,35 +150,41 @@ function App() {
             <LoadingCtn title="Wallet Power Loading" />
           ) : (
             <>
-              <BalanceArea
-                wallets={wallets}
-                settings={settings}
-                updateDecredState={
-                  updateDecredState
-                }
-                userLocale={navigator.language}
-              />
-              {page === 'home' &&
-                <Home />
-              }
-              {page === 'send' &&
-                <SendDCR addressInput={sendAddress}/>
-              }
-              {page === 'receive' &&
-                <ReceiveDCR />
-              }
-              {page === 'wallets' &&
-                <Wallets />
-              }
-              {page === 'backup' &&
-                <BackupWallet />
-              }
-              {page === 'contacts' &&
-                <Contacts setSendPage={setSendPage} />
-              }
-              {page === 'configure' &&
-                <Configure />
-              }
+              {wallet === false ? (
+                <OnBoarding />
+              ) : (
+                <>
+                  <BalanceArea
+                    wallets={wallets}
+                    settings={settings}
+                    updateDecredState={
+                      updateDecredState
+                    }
+                    userLocale={navigator.language}
+                  />
+                  {page === 'home' &&
+                    <Home />
+                  }
+                  {page === 'send' &&
+                    <SendDCR addressInput={sendAddress} />
+                  }
+                  {page === 'receive' &&
+                    <ReceiveDCR />
+                  }
+                  {page === 'wallets' &&
+                    <Wallets />
+                  }
+                  {page === 'backup' &&
+                    <BackupWallet />
+                  }
+                  {page === 'contacts' &&
+                    <Contacts setSendPage={setSendPage} />
+                  }
+                  {page === 'configure' &&
+                    <Configure />
+                  }
+                </>
+              )}
             </>
           )}
         </div>
