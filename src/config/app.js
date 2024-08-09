@@ -7,9 +7,11 @@ const appConfig = {
     name: 'Decred',
     ticker: 'DCR',
     derivationPath: 42,
+    testDerivationPath: 1,
+    network: 'mainnet',
     logo: mainLogo,
-    legacyPrefix: 'bitcoincash',
-    coingeckoId: 'ecash',
+    legacyPrefix: 'decred',
+    coingeckoId: 'dcr',
     fiatUpdateIntervalMs: 90000,
     defaultFee: 2010, // satoshis per kb
     minFee: 1000, // satoshis per kb

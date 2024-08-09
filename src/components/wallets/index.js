@@ -40,6 +40,7 @@ import Modal from '../../components/common/Modal';
 import { getWalletNameError, validateMnemonic } from '../../validation';
 import { ModalInput } from '../../components/common/Inputs';
 import debounce from 'lodash.debounce';
+import { DerivationPath } from '../../utils/const';
 
 export const generateMnemonic = () => {
     const mnemonic = bip39.generateMnemonic(
@@ -233,7 +234,7 @@ const Wallets = () => {
     };
 
     const addWalletToContacts = async wallet => {
-        const addressToAdd = wallet.paths[42].address;
+        const addressToAdd = wallet.paths[DerivationPath()].address;
         // Check to see if the contact exists
         const contactExists = contactList.find(
             contact => contact.address === addressToAdd,
@@ -350,7 +351,7 @@ const Wallets = () => {
                                 <SvgButtonPanel>
                                     <CopyIconButton
                                         name={`Copy address of ${wallet.name}`}
-                                        data={wallet.paths[42].address}
+                                        data={wallet.paths[DerivationPath()].address}
                                         showToast
                                     />
                                     <IconButton
@@ -391,7 +392,7 @@ const Wallets = () => {
                                         <SvgButtonPanel>
                                             <CopyIconButton
                                                 name={`Copy address of ${wallet.name}`}
-                                                data={wallet.paths[42].address}
+                                                data={wallet.paths[DerivationPath()].address}
                                                 showToast
                                             />
                                             <IconButton

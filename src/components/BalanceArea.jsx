@@ -9,6 +9,7 @@ import {
 } from '../config/cashtabSettings';
 import debounce from 'lodash.debounce';
 import { toast } from 'react-toastify';
+import { DerivationPath } from "../utils/const";
 
 export default function BalanceArea({
   wallets,
@@ -19,7 +20,7 @@ export default function BalanceArea({
 }) {
   userLocale = typeof userLocale === 'undefined' ? 'en-US' : userLocale;
   const balanceSats = wallets[0].state.balanceSats
-  const address = wallets[0].paths[42].address;
+  const address = wallets[0].paths[DerivationPath()].address;
   const renderBalanceHeader = Number.isInteger(balanceSats);
   const renderFiatValues = typeof fiatPrice === 'number';
   let balanceDCR,
