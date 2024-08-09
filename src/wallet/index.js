@@ -3,6 +3,7 @@ import CoinKey from 'coinkey';
 import CoinInfo from 'coininfo';
 import HDKey from 'hdkey';
 import appConfig from '../config/app'
+import { NetWorkType, NetWorkPostFix, DerivationPath } from '../utils/const'
 import * as bip39 from 'bip39';
 
 const SATOSHIS_PER_XEC = 100;
@@ -62,7 +63,7 @@ export const createDecredWallet = async (mnemonic, additionalPaths = []) => {
     const seed = bip39.mnemonicToSeedSync(mnemonic);
     // Create an HD wallet key from the seed
     const hdKey = HDKey.fromMasterSeed(Buffer.from(seed, "hex"));
-    const pathInfo = getPathInfo(hdKey, appConfig.derivationPath);
+    const pathInfo = getPathInfo(hdKey, DerivationPath());
     wallet.name = pathInfo.address.slice(0, 6);
     const pathMap = {};
     pathMap[appConfig.derivationPath] = pathInfo
@@ -74,12 +75,23 @@ const getPathInfo = (hdKey, abbreviatedDerivationPath) => {
     const fullDerivationPath = `m/44'/${abbreviatedDerivationPath}'/0'/0/0`;
     // Derive a child key from the HD key using the defined path
     const child = hdKey.derive(fullDerivationPath);
-    const coinKey = new CoinKey(child.privateKey, CoinInfo("dcr").versions)
+    const coinKey = new CoinKey(child.privateKey, CoinInfo("dcr" + getCoinTypePostfix()).versions)
     return {
         address: coinKey.publicAddress,
         wif: coinKey.privateWif,
     };
 };
+
+const getCoinTypePostfix = () => {
+    switch (appConfig.network) {
+        case NetWorkType.Testnet:
+            return NetWorkPostFix.TestPostFix;
+        case NetWorkType.Simnet:
+            return NetWorkPostFix.SimPostFix;
+        default:
+            return NetWorkPostFix.MainPostFix;
+    }
+}
 
 export const getWalletsForNewActiveWallet = (walletToActivate, wallets) => {
     // Clone wallets so we do not mutate the app's wallets array

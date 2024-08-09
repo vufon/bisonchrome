@@ -2,6 +2,7 @@ import React from 'react';
 import { QRCode } from './QRCode';
 import styled from 'styled-components';
 import { WalletContext } from '../wallet/context';
+import { DerivationPath } from '../utils/const';
 const QrCodeCtn = styled.div``;
 
 export const ReceiveCtn = styled.div`
@@ -44,7 +45,7 @@ export default function AddressQR() {
       {wallet !== false && (
         <QrCodeCtn title="QR Code">
           <QRCode
-            address={wallet.paths[42].address}
+            address={wallet.paths[DerivationPath()].address}
             size={getQrCodeWidth(width)}
             logoSizePx={width >= 500 ? 48 : 24}
           />

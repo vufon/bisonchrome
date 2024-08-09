@@ -13,6 +13,7 @@ import appConfig from '../config/app';
 import { fiatToSatoshis } from '../wallet/index';
 import { UNKNOWN_TOKEN_ID } from '../config/CashtabCache';
 import { STRINGIFIED_DECIMALIZED_REGEX } from '../wallet/index';
+import { DerivationPath } from '../utils/const';
 
 /**
  * Checks whether the instantiated sideshift library object has loaded
@@ -411,7 +412,7 @@ export const isValidCashtabWallet = wallet => {
     // Return false if we do not have Path1899
     // This also handles the case of a JSON-activated pre-2.9.0 wallet
 
-    if (typeof wallet.paths[42] === 'undefined') {
+    if (typeof wallet.paths[DerivationPath()] === 'undefined') {
         return false;
     }
     for (var key in wallet.paths) {
