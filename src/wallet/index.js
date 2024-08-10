@@ -2,6 +2,7 @@ import { BN } from 'slp-mdm';
 import appConfig from '../config/app'
 import { NetWorkType, DerivationPath, NetWorkName } from '../utils/const'
 import * as Decred from 'decredjs-lib'
+import * as bip39 from 'bip39';
 
 const SATOSHIS_PER_XEC = 100;
 const STRINGIFIED_INTEGER_REGEX = /^[0-9]+$/;
@@ -54,10 +55,11 @@ export const createDecredWallet = async (mnemonicWords) => {
             parsedTxHistory: [],
         },
     };
+    console.log('check word: ' + mnemonicWords)
     var mnemonicObj
     //create Decred mnemonic
     if (mnemonicWords) {
-        mnemonicObj = Decred.Mnemonic(mnemonicWords)
+        mnemonicObj = Decred.Mnemonic(mnemonicWords, bip39.wordlists['english'])
     } else {
         mnemonicObj = Decred.Mnemonic()
     }
@@ -83,6 +85,7 @@ export const createDecredWallet = async (mnemonicWords) => {
     const pathMap = {};
     pathMap[DerivationPath()] = pathInfo
     wallet.paths = pathMap;
+    console.log('wallet data: ' + JSON.stringify(wallet))
     return wallet;
 }
 

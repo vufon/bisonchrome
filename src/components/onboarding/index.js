@@ -37,7 +37,7 @@ const OnBoarding = () => {
         // Event("Category", "Action", "Label")
         // Track number of created wallets from onboarding
         //Event('Onboarding.js', 'Create Wallet', 'New');
-        const newWallet = await createDecredWallet();
+        const newWallet = await createDecredWallet(generateMnemonic());
         updateDecredState('wallets', [...wallets, newWallet]);
     }
 

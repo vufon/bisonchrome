@@ -38,14 +38,11 @@ import { getWalletNameError, validateMnemonic } from '../../validation';
 import { ModalInput } from '../../components/common/Inputs';
 import debounce from 'lodash.debounce';
 import { DerivationPath } from '../../utils/const';
+import * as Decred from 'decredjs-lib'
+import appConfig from '../../config/app';
 
 export const generateMnemonic = () => {
-    const mnemonic = bip39.generateMnemonic(
-        128,
-        randomBytes,
-        bip39.wordlists['english'],
-    );
-    return mnemonic;
+    return Decred.Mnemonic._mnemonic(appConfig.seedwords === 12 ? 128 : 256, bip39.wordlists['english'])
 };
 
 const Wallets = () => {
@@ -72,7 +69,7 @@ const Wallets = () => {
     const userLocale = getUserLocale(navigator);
     async function createWallet() {
         //const wallet = CoinKey.createRandom(CoinInfo("dcr").versions);
-        const newWallet = await createDecredWallet()
+        const newWallet = await createDecredWallet(generateMnemonic())
         const walletAlreadyInWalletsSomehow = wallets.find(
             wallet =>
                 wallet.name === newWallet.name ||
@@ -142,6 +139,7 @@ const Wallets = () => {
         }
 
         // Create a new wallet from mnemonic
+        console.log('check import: ' + formData.mnemonic)
         const newImportedWallet = await createDecredWallet(formData.mnemonic);
 
         // Handle edge case of another wallet having the same name

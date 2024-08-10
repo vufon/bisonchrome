@@ -8,6 +8,7 @@ const appConfig = {
     ticker: 'DCR',
     derivationPath: 42,
     testDerivationPath: 42,
+    seedwords: 24, //12 or 24
     network: 'testnet',
     logo: mainLogo,
     legacyPrefix: 'decred',

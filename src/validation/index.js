@@ -60,7 +60,7 @@ export const validateMnemonic = (
 ) => {
     try {
         if (!mnemonic || !wordlist) return false;
-
+         
         // Preprocess the words
         const words = mnemonic.split(' ');
         // Detect blank phrase
