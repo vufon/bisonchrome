@@ -41,8 +41,9 @@ import { DerivationPath } from '../../utils/const';
 import * as Decred from 'decredjs-lib'
 import appConfig from '../../config/app';
 
+//TODO: 
 export const generateMnemonic = () => {
-    return Decred.Mnemonic._mnemonic(appConfig.seedwords === 12 ? 128 : 256, bip39.wordlists['english'])
+    return Decred.Mnemonic._mnemonic(appConfig.seedwords === 17 ? 128 : 256, Decred.Mnemonic.Words.ENGLISH)
 };
 
 const Wallets = () => {

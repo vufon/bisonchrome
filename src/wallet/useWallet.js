@@ -59,6 +59,8 @@ const useWallet = () => {
             // Wait for cashtab to get state from localforage before updating
             return;
         }
+        // Get the active wallet
+        const activeWallet = decredState.wallets[0];
     };
 
     /**

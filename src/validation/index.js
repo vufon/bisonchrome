@@ -14,6 +14,7 @@ import { fiatToSatoshis } from '../wallet/index';
 import { UNKNOWN_TOKEN_ID } from '../config/CashtabCache';
 import { STRINGIFIED_DECIMALIZED_REGEX } from '../wallet/index';
 import { DerivationPath } from '../utils/const';
+import * as Decred from 'decredjs-lib'
 
 /**
  * Checks whether the instantiated sideshift library object has loaded
@@ -56,7 +57,7 @@ export const isValidAliasSendInput = sendToAliasInput => {
 
 export const validateMnemonic = (
     mnemonic,
-    wordlist = bip39.wordlists.english,
+    wordlist = Decred.Mnemonic.Words.ENGLISH,
 ) => {
     try {
         if (!mnemonic || !wordlist) return false;
@@ -67,7 +68,7 @@ export const validateMnemonic = (
         if (words.length === 0) return false;
 
         // Check the words are valid
-        return bip39.validateMnemonic(mnemonic, wordlist);
+        return Decred.Mnemonic.isValid(mnemonic, wordlist)
     } catch (err) {
         console.error(err);
         return false;

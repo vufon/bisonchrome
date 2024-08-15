@@ -55,15 +55,14 @@ export const createDecredWallet = async (mnemonicWords) => {
             parsedTxHistory: [],
         },
     };
-    console.log('check word: ' + mnemonicWords)
     var mnemonicObj
     //create Decred mnemonic
     if (mnemonicWords) {
-        mnemonicObj = Decred.Mnemonic(mnemonicWords, bip39.wordlists['english'])
+        mnemonicObj = Decred.Mnemonic(mnemonicWords)
     } else {
         mnemonicObj = Decred.Mnemonic()
     }
-
+    
     if (!mnemonicObj || !mnemonicObj.phrase) {
         throw new Error(
             `Error mnemonic: Create mnemonic failed`,
@@ -85,7 +84,6 @@ export const createDecredWallet = async (mnemonicWords) => {
     const pathMap = {};
     pathMap[DerivationPath()] = pathInfo
     wallet.paths = pathMap;
-    console.log('wallet data: ' + JSON.stringify(wallet))
     return wallet;
 }
 
