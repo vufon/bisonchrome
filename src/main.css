@@ -199,3 +199,15 @@ label.urlLabel {
 .fs-18 {
     font-size: 18px;
 }
+
+.text-underline {
+    text-decoration: underline;
+}
+
+.cursor-pointer {
+    cursor: pointer;
+}
+
+code {
+    color: white !important;
+}

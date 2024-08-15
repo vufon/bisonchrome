@@ -48,8 +48,8 @@ export default function BalanceArea({
 
       // Display exchange rate formatted for user's browser locale
       formattedExchangeRate = fiatPrice.toLocaleString(userLocale, {
-        minimumFractionDigits: appConfig.pricePrecisionDecimals,
-        maximumFractionDigits: appConfig.pricePrecisionDecimals,
+        minimumFractionDigits: appConfig.fiatDecimals,
+        maximumFractionDigits: appConfig.fiatDecimals,
       });
     }
   }

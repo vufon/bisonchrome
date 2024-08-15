@@ -5,6 +5,7 @@
 import React from 'react';
 import styled from 'styled-components';
 import PropTypes from 'prop-types';
+import appConfig from '../../config/app';
 
 const SeedHolder = styled.div`
     display: flex;
@@ -16,7 +17,6 @@ const SeedRow = styled.code`
     font-size: 16px;
 `;
 
-const CASHTAB_SEED_WORDCOUNT = 12;
 const CASHTAB_SEED_SLICE_SIZE = 4;
 
 const Seed = ({ mnemonic }) => {
@@ -24,7 +24,7 @@ const Seed = ({ mnemonic }) => {
     const rowArray = [];
     for (
         let i = 0;
-        i < CASHTAB_SEED_WORDCOUNT / CASHTAB_SEED_SLICE_SIZE;
+        i < appConfig.seedwords / CASHTAB_SEED_SLICE_SIZE;
         i += 1
     ) {
         rowArray.push(

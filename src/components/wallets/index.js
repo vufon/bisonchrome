@@ -140,7 +140,6 @@ const Wallets = () => {
         }
 
         // Create a new wallet from mnemonic
-        console.log('check import: ' + formData.mnemonic)
         const newImportedWallet = await createDecredWallet(formData.mnemonic);
 
         // Handle edge case of another wallet having the same name

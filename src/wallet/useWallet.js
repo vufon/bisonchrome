@@ -22,6 +22,8 @@ import {
 import { toast } from 'react-toastify';
 import DecredState from '../config/DecredState';
 import { getUserLocale } from '../utils/helpers';
+import { DerivationPath } from '../utils/const';
+import { getAddressTxCountRaw, getWalletData } from '../explib';
 
 const useWallet = () => {
     const [cashtabLoaded, setCashtabLoaded] = useState(false);
@@ -61,6 +63,18 @@ const useWallet = () => {
         }
         // Get the active wallet
         const activeWallet = decredState.wallets[0];
+        const walletData = await getWalletData(activeWallet)
+        const newState = {
+            balanceSats: walletData.balance,
+            Utxos: walletData.utxos,
+            parsedTxHistory: walletData.txList,
+        }
+        activeWallet.state = newState
+        updateDecredState('wallets', [
+            activeWallet,
+            ...decredState.wallets.slice(1),
+        ]);
+        setApiError(false)
     };
 
     /**
@@ -301,26 +315,26 @@ const useWallet = () => {
             : 'usd',
     ) => {
         // Split this variable out in case coingecko changes
-        const cryptoId = appConfig.coingeckoId;
+        const cryptoId = appConfig.exchangeId;
         // Keep this in the code, because different URLs will have different outputs require different parsing
         const priceApiUrl = `https://api.coingecko.com/api/v3/simple/price?ids=${cryptoId}&vs_currencies=${fiatCode}&include_last_updated_at=true`;
         try {
-            const xecPrice = await fetch(priceApiUrl);
-            const xecPriceJson = await xecPrice.json();
-            let xecPriceInFiat = xecPriceJson[cryptoId][fiatCode];
+            const dcrPrice = await fetch(priceApiUrl);
+            const dcrPriceJson = await dcrPrice.json();
+            let dcrPriceInFiat = dcrPriceJson[cryptoId][fiatCode];
 
-            if (typeof xecPriceInFiat === 'number') {
+            if (typeof dcrPriceInFiat === 'number') {
                 // If we have a good fetch
-                return setFiatPrice(xecPriceInFiat);
+                return setFiatPrice(dcrPriceInFiat);
             }
         } catch (err) {
             if (err.message === 'Failed to fetch') {
                 // The most common error is coingecko 429
                 console.error(
-                    `Failed to fetch XEC Price: Bad response or rate limit from CoinGecko`,
+                    `Failed to fetch DCR Price: Bad response or rate limit from Kucoin`,
                 );
             } else {
-                console.error(`Failed to fetch XEC Price`, err);
+                console.error(`Failed to fetch DCR Price`, err);
             }
         }
         // If we have an error in the price fetch, or an invalid type without one, do not set the price

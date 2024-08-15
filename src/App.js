@@ -104,7 +104,7 @@ export const Footer = styled.div`
 
 function App() {
   const ContextValue = React.useContext(WalletContext);
-  const { updateDecredState, decredState, cashtabLoaded, loading } = ContextValue;
+  const { updateDecredState, decredState, cashtabLoaded, loading, fiatPrice } = ContextValue;
   const { wallets, settings, } = decredState;
   const wallet = wallets.length > 0 ? wallets[0] : false;
   const walletState = getWalletState(wallet);
@@ -157,13 +157,14 @@ function App() {
                   <BalanceArea
                     wallets={wallets}
                     settings={settings}
+                    fiatPrice={fiatPrice}
                     updateDecredState={
                       updateDecredState
                     }
                     userLocale={navigator.language}
                   />
                   {page === 'home' &&
-                    <Home />
+                    <Home setPage={setPage} />
                   }
                   {page === 'send' &&
                     <SendDCR addressInput={sendAddress} />

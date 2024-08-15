@@ -1,10 +1,10 @@
 import BackupWallet from "./BackupWallet";
 import AddressQR from "./AddressQR";
 
-export default function Home() {
+export default function Home({ setPage }) {
   return (
     <>
-      <BackupWallet />
+      <BackupWallet setPage={setPage} />
       <AddressQR />
     </>
   )

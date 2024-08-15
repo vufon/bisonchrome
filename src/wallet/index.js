@@ -4,7 +4,7 @@ import { NetWorkType, DerivationPath, NetWorkName } from '../utils/const'
 import * as Decred from 'decredjs-lib'
 import * as bip39 from 'bip39';
 
-const SATOSHIS_PER_XEC = 100;
+const SATOSHIS_PER_XEC = 1e8;
 const STRINGIFIED_INTEGER_REGEX = /^[0-9]+$/;
 export const STRINGIFIED_DECIMALIZED_REGEX = /^\d*\.?\d*$/;
 /**

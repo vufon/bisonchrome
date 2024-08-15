@@ -7,19 +7,19 @@ const appConfig = {
     name: 'Decred',
     ticker: 'DCR',
     derivationPath: 42,
-    testDerivationPath: 42,
+    testDerivationPath: 1,
     seedwords: 33, //17 or 33
     network: 'testnet',
     logo: mainLogo,
     legacyPrefix: 'decred',
-    coingeckoId: 'dcr',
+    exchangeId: 'decred',
     fiatUpdateIntervalMs: 90000,
     defaultFee: 2010, // satoshis per kb
     minFee: 1000, // satoshis per kb
     dustSats: 546,
-    cashDecimals: 2,
+    cashDecimals: 8,
     fiatDecimals: 2,
-    pricePrecisionDecimals: 8,
+    pricePrecisionDecimals: 2,
     tokenName: 'eToken',
     tokenTicker: 'eToken',
     localStorageMaxCharacters: 24,

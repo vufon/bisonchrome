@@ -9,6 +9,7 @@ import Seed from '../common/Seed';
 import Switch from '../common/Switch';
 import { Alert, Info } from '../common/Atoms';
 import { getUserLocale } from '../../utils/helpers';
+import { WalletContext } from '../../wallet/context';
 
 const BackupFlex = styled.div`
     margin: 12px 0;
@@ -37,6 +38,11 @@ const SwitchLabel = styled.div``;
 const BackupWallet = () => {
     const [showSeed, setShowSeed] = useState(false);
     const userLocale = getUserLocale(navigator);
+    const ContextValue = React.useContext(WalletContext);
+    const { decredState } = ContextValue;
+    const { wallets } = decredState;
+    const wallet = wallets.length > 0 ? wallets[0] : false;
+
     return (
         <BackupFlex>
             <FlexRow>
@@ -68,13 +74,13 @@ const BackupWallet = () => {
                 <SwitchLabel>Show seed phrase</SwitchLabel>
             </SwitchRow>
             <FlexRow>
-                {showSeed && (
+                {showSeed && wallet && (
                     <CopyToClipboard
-                        data={"seed text sample"}
+                        data={wallet.mnemonic}
                         showToast
                         customMsg={'Copied seed phrase'}
                     >
-                        <Seed mnemonic={"seed text sample"} />
+                        <Seed mnemonic={wallet.mnemonic} />
                     </CopyToClipboard>
                 )}
             </FlexRow>
