@@ -1,9 +1,13 @@
 import appConfig from '../config/app';
 
-
 export const NetWorkType = {
     Mainnet: 'mainnet',
     Testnet: 'testnet',
+};
+
+export const DUMP_ADDRESS = {
+    MainnetAddr: 'DsdWUgon6bvErENczvkifDqXqxUVRYLRMsM',
+    TestnetAddr: 'TcZzyn89mrSHUv5bxfkTan8VvQCxwkkSpFK',
 };
 
 export const NetWorkName = {

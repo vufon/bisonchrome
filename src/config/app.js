@@ -16,7 +16,7 @@ const appConfig = {
     fiatUpdateIntervalMs: 90000,
     defaultFee: 2010, // satoshis per kb
     minFee: 1000, // satoshis per kb
-    dustSats: 546,
+    dustSats: 500000,
     cashDecimals: 8,
     fiatDecimals: 2,
     pricePrecisionDecimals: 2,

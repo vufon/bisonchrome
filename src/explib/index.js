@@ -2,8 +2,10 @@ import appConfig from "../config/app";
 import { httpGet } from "../http";
 import { NetWorkName } from "../utils/const";
 
-export const TESTNET_EXPLORER_API = 'https://testnet.dcrdata.org/api'
+export const TESTNET_EXPLORER_API = 'http://173.214.168.198:17777/api'
 export const MAINET_EXPLORER_API = 'https://dcrdata.decred.org/api'
+export const TESTNET_EXPLORER_URL = 'http://173.214.168.198:17777'
+export const MAINET_EXPLORER_URL = 'https://blockcare.pro'
 
 export const getWalletData = async (wallet) => {
     const walletData = {
@@ -52,11 +54,11 @@ export const getPathedTxAndTxHistoryPromise = async (address, path) => {
                             const inputData = {
                                 address: address,
                                 path: path,
-                                txid: txid,
-                                vout: out.n,
-                                scriptPubKey: scriptPubkey.hex,
-                                amount: out.value,
-                                satoshis: Math.round(out.value * 1e8),
+                                txId: txid,
+                                outputIndex: out.n,
+                                script: scriptPubkey.hex,
+                                total: out.value,
+                                atoms: Math.round(out.value * 1e8),
                                 confirmations: confirmations
                             }
                             inputs.push(inputData)
@@ -83,7 +85,7 @@ export const getPathedTxAndTxHistoryPromise = async (address, path) => {
     resData.utxos = utxos
     //calculate balance of address
     utxos.forEach(utxo => {
-        balance += utxo.satoshis
+        balance += utxo.atoms
     })
     resData.balance = balance
     return resData
@@ -92,7 +94,7 @@ export const getPathedTxAndTxHistoryPromise = async (address, path) => {
 export const checkIsOutputOfOtherTx = (input, outputTxs) => {
     let isOutput = false
     outputTxs.forEach(out => {
-        if (input.txid == out.txid && input.vout == out.vout) {
+        if (input.txId == out.txid && input.outputIndex == out.vout) {
             isOutput = true
             return
         }
@@ -116,4 +118,19 @@ export const getAddressBalance = (address) => {
 
 export const getAPIURL = () => {
     return appConfig.network == NetWorkName.MainnetName ? MAINET_EXPLORER_API : TESTNET_EXPLORER_API
+}
+
+export const getExplorerURL = () => {
+    return appConfig.network == NetWorkName.MainnetName ? MAINET_EXPLORER_URL : TESTNET_EXPLORER_URL
+}
+
+export const broadcastTx = async (txHex, depth) => {
+    const resData = await httpGet(getAPIURL() + '/broadcast?hex=' + txHex)
+    if (resData.error && depth == 5) {
+        throw new Error('Broadcast transaction failed')
+    }
+    if (resData.error) {
+        return broadcastTx(txHex, depth + 1)
+    }
+    return resData
 }

@@ -17,6 +17,7 @@ import appConfig from '../../config/app';
 import { isMobile } from '../../utils/helpers';
 import { CurrencySelect } from '../common/Inputs';
 import Switch from '../common/Switch';
+import { WalletContext } from '../../wallet/context';
 
 const VersionContainer = styled.div`
     color: ${props => props.theme.contrast};
@@ -74,6 +75,11 @@ const GeneralSettingsItem = styled.div`
 `;
 
 const Configure = () => {
+    const ContextValue = React.useContext(WalletContext);
+    const { updateDecredState, decredState } = ContextValue;
+    const { settings, wallets } = decredState;
+
+    const wallet = wallets.length > 0 ? wallets[0] : false;
     return (
         <StyledConfigure title="Settings">
             <HeadlineAndIcon>
@@ -84,7 +90,13 @@ const Configure = () => {
             </HeadlineAndIcon>
             <CurrencySelect
                 name="configure-fiat-select"
-                value={"usd"}
+                value={decredState.settings.fiatCurrency}
+                handleSelect={e => {
+                    updateDecredState('settings', {
+                        ...settings,
+                        fiatCurrency: e.target.value,
+                    });
+                }}
             />
             <StyledSpacer />
             <HeadlineAndIcon>

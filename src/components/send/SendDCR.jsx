@@ -2,7 +2,7 @@ import styled from 'styled-components';
 import Switch from '../common/Switch';
 import React, { useState } from 'react';
 import appConfig from '../../config/app';
-import { formatBalance } from '../../utils/formatting';
+import { formatBalance, formatFiatBalance } from '../../utils/formatting';
 import { ConvertAmount, TxLink } from '../common/Atoms';
 import { getUserLocale } from '../../utils/helpers';
 import PrimaryButton from '../common/Buttons';
@@ -11,6 +11,13 @@ import {
   SendXecInput,
   TextArea,
 } from '../common/Inputs';
+import Modal from '../common/Modal';
+import { isValidMultiSendUserInput, isValidXecSendAmount, parseAddressInput, shouldSendXecBeDisabled } from '../../validation';
+import { WalletContext } from '../../wallet/context';
+import { EstimateFee, fiatToSatoshis, getMaxSendAmountSatoshis, getMultisendTargetOutputs, getWalletState, SendAmount, SendToMutilAddress, sumOneToManyDcr, toDCR, toSatoshis } from '../../wallet';
+import { supportedFiatCurrencies } from '../../config/cashtabSettings';
+import { broadcastTx, getExplorerURL } from '../../explib';
+import { toast } from 'react-toastify';
 
 const SendXecForm = styled.div`
     margin: 12px 0;
@@ -18,6 +25,9 @@ const SendXecForm = styled.div`
     flex-direction: column;
     gap: 12px;
 `;
+export const CashReceivedNotificationIcon = () => (
+  <img height={'24px'} width={'24px'} src={appConfig.logo} />
+);
 const SendXecRow = styled.div``;
 const SwitchAndLabel = styled.div`
     display: flex;
@@ -92,6 +102,11 @@ const InputAndAliasPreviewHolder = styled.div`
     flex-direction: column;
 `;
 
+const SentLink = styled.a`
+    color: ${props => props.theme.walletBackground};
+    text-decoration: none;
+`;
+
 const InputModesHolder = styled.div`
     min-height: 9rem;
     ${SendToOneHolder} {
@@ -125,22 +140,78 @@ const SendDCR = ({ addressInput = '' }) => {
     cashtabMsg: '',
     opReturnRaw: '',
   };
+  const ContextValue = React.useContext(WalletContext);
+  const {
+    fiatPrice,
+    apiError,
+    decredState,
+  } = ContextValue;
+
+  const { settings, wallets } = decredState;
+  const wallet = wallets.length > 0 ? wallets[0] : false;
+  const walletState = getWalletState(wallet);
+  const { balanceSats } = walletState;
   const tempFormData = emptyFormData
   tempFormData.address = addressInput
   const [isOneToManyXECSend, setIsOneToManyXECSend] = useState(false);
-  const [txInfoFromUrl, setTxInfoFromUrl] = useState(false);
   const [formData, setFormData] = useState(tempFormData);
   const [sendAddressError, setSendAddressError] = useState(false);
   const [selectedCurrency, setSelectedCurrency] = useState(appConfig.ticker);
   const [sendAmountError, setSendAmountError] = useState(false);
-  const [sendWithOpReturnRaw, setSendWithOpReturnRaw] = useState(false);
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [feeEstimate, setFeeEstimate] = useState(undefined);
+  const [parsedAddressInput, setParsedAddressInput] = useState(
+    parseAddressInput(''),
+  );
   // const [opReturnRawError, setOpReturnRawError] = useState(false);
   // const [parsedOpReturnRaw, setParsedOpReturnRaw] = useState({
   //   protocol: '',
   //   data: '',
   // });
-  let multiSendTotal = 0;
   const handleAddressChange = async e => {
+    const { value, name } = e.target;
+    const parsedAddressInput = parseAddressInput(
+      value,
+      balanceSats,
+      userLocale,
+    );
+
+    // Set in state as various param outputs determine app rendering
+    // For example, a valid amount param should disable user amount input
+    setParsedAddressInput(parsedAddressInput);
+
+    const address = parsedAddressInput.address.value;
+    let renderedSendToError = parsedAddressInput.address.error;
+    if (
+      'queryString' in parsedAddressInput &&
+      typeof parsedAddressInput.queryString.error === 'string'
+    ) {
+      // If you have a bad queryString, this should be the rendered error
+      renderedSendToError = parsedAddressInput.queryString.error;
+    }
+
+    setSendAddressError(renderedSendToError);
+
+    // Set amount if it's in the query string
+    if ('amount' in parsedAddressInput) {
+      // Set currency to non-fiat
+      setSelectedCurrency(appConfig.ticker);
+
+      // Use this object to mimic user input and get validation for the value
+      let amountObj = {
+        target: {
+          name: 'amount',
+          value: parsedAddressInput.amount.value,
+        },
+      };
+      handleAmountChange(amountObj);
+    }
+
+    // Set address field to user input
+    setFormData(p => ({
+      ...p,
+      [name]: value,
+    }));
   };
   const handleSelectedCurrencyChange = e => {
     setSelectedCurrency(e.target.value);
@@ -150,32 +221,250 @@ const SendDCR = ({ addressInput = '' }) => {
       amount: '',
     }));
   };
-  const onMax = () => {
-  }
-  const handleAmountChange = e => {
-    const { value, name } = e.target;
 
+  const isValidAmount = (value) => {
     // Validate user input send amount
-    const isValidAmountOrErrorMsg = true
+    const isValidAmountOrErrorMsg = isValidXecSendAmount(
+      value,
+      balanceSats,
+      userLocale,
+      selectedCurrency,
+      fiatPrice,
+    );
 
     setSendAmountError(
       isValidAmountOrErrorMsg !== true ? isValidAmountOrErrorMsg : false,
     );
+  }
 
+  const postHandlerAmountChange = e => {
+    const { value, name } = e.target;
+    setFormData(p => ({
+      ...p,
+      [name]: value,
+    }));
+  }
+
+  const onMax = () => {
+    // Clear amt error
+    setSendAmountError(false);
+
+    // Set currency to XEC
+    setSelectedCurrency(appConfig.ticker);
+    // Build a tx sending all non-token utxos
+    // Determine the amount being sent (outputs less fee)
+    let maxSendSatoshis;
+    try {
+      // An error will be thrown if the wallet has insufficient funds to send more than dust
+      const maxSend = getMaxSendAmountSatoshis(wallet);
+      maxSendSatoshis = maxSend.maxAmount
+      setFeeEstimate(maxSend.fee)
+    } catch (err) {
+      // Set to zero. In this case, 0 is the max amount we can send, and we know
+      // this will trigger the expected dust validation error
+      maxSendSatoshis = 0;
+    }
+
+    // Convert to XEC to set in form
+    const maxSendXec = toDCR(maxSendSatoshis);
+    isValidAmount(maxSendXec)
+    // Update value in the send field
+    // Note, if we are updating it to 0, we will get a 'dust' error
+    postHandlerAmountChange({
+      target: {
+        name: 'amount',
+        value: maxSendXec,
+      },
+    });
+  }
+
+  const handleAmountChange = e => {
+    const { value } = e.target;
+    isValidAmount(value)
+    if (!sendAmountError) {
+      //estimate fee
+      setFeeEstimate(EstimateFee(wallet, toSatoshis(value)))
+    }
+    postHandlerAmountChange(e)
+  };
+
+  const userLocale = getUserLocale(navigator);
+  let fiatPriceString = '';
+  let multiSendTotal =
+    typeof formData.multiAddressInput === 'string'
+      ? sumOneToManyDcr(formData.multiAddressInput.split('\n'))
+      : 0;
+  if (isNaN(multiSendTotal)) {
+    multiSendTotal = 0;
+  }
+  if (fiatPrice !== null && !isNaN(formData.amount)) {
+    if (selectedCurrency === appConfig.ticker) {
+      // insert symbol and currency before/after the locale formatted fiat balance
+      fiatPriceString = isOneToManyXECSend
+        ? `${settings
+          ? `${supportedFiatCurrencies[settings.fiatCurrency]
+            .symbol
+          } `
+          : '$ '
+        } ${(fiatPrice * multiSendTotal).toLocaleString(userLocale, {
+          minimumFractionDigits: appConfig.cashDecimals,
+          maximumFractionDigits: appConfig.cashDecimals,
+        })} ${settings && settings.fiatCurrency
+          ? settings.fiatCurrency.toUpperCase()
+          : 'USD'
+        }`
+        : `${settings
+          ? `${supportedFiatCurrencies[settings.fiatCurrency]
+            .symbol
+          } `
+          : '$ '
+        } ${(fiatPrice * formData.amount).toLocaleString(userLocale, {
+          minimumFractionDigits: appConfig.cashDecimals,
+          maximumFractionDigits: appConfig.cashDecimals,
+        })} ${settings && settings.fiatCurrency
+          ? settings.fiatCurrency.toUpperCase()
+          : 'USD'
+        }`;
+    } else {
+      fiatPriceString = `${formData.amount !== 0
+        ? formatFiatBalance(
+          toDCR(fiatToSatoshis(formData.amount, fiatPrice)),
+          userLocale,
+        )
+        : formatFiatBalance(0, userLocale)
+        } ${appConfig.ticker}`;
+    }
+  }
+  const [multiSendAddressError, setMultiSendAddressError] = useState(false);
+
+  const priceApiError = fiatPrice === null && selectedCurrency !== 'DCR';
+  const disableSendButton = shouldSendXecBeDisabled(
+    formData,
+    balanceSats,
+    apiError,
+    sendAmountError,
+    sendAddressError,
+    multiSendAddressError,
+    priceApiError,
+    isOneToManyXECSend,
+  );
+
+  const handleMultiAddressChange = e => {
+    const { value, name } = e.target;
+    let errorOrIsValid = isValidMultiSendUserInput(
+      value,
+      balanceSats,
+      userLocale,
+    );
+
+    // If you get an error msg, set it. If validation is good, clear error msg.
+    setMultiSendAddressError(
+      typeof errorOrIsValid === 'string' ? errorOrIsValid : false,
+    );
+
+    // Set address field to user input
     setFormData(p => ({
       ...p,
       [name]: value,
     }));
   };
 
-  const userLocale = getUserLocale(navigator);
-  let fiatPriceString = '';
-  const handleMultiAddressChange = e => {
+  const checkForConfirmationBeforeSendXec = () => {
+    if (settings.sendModal) {
+      setIsModalVisible(settings.sendModal);
+    } else {
+      // if the user does not have the send confirmation enabled in settings then send directly
+      send();
+    }
   };
-  const [multiSendAddressError, setMultiSendAddressError] = useState(false);
+
+  const handleOk = () => {
+    setIsModalVisible(false);
+    send();
+  };
+
+  const handleCancel = () => {
+    setIsModalVisible(false);
+  };
+
+  const clearInputForms = () => {
+    setFormData(emptyFormData);
+    setParsedAddressInput(parseAddressInput(''));
+    // Reset to DCR
+    // Note, this ensures we never are in fiat send mode for multi-send
+    setSelectedCurrency(appConfig.ticker);
+  };
+
+  async function send() {
+    setFormData({
+      ...formData,
+    });
+
+    //check valid
+    if (sendAddressError || sendAmountError) {
+      return
+    }
+    let addresses = []
+    if (isOneToManyXECSend) {
+      // Handle DCR send to multiple addresses
+      addresses = addresses.concat(
+        getMultisendTargetOutputs(formData.multiAddressInput),
+      );
+    } else {
+      const satoshisToSend =
+        selectedCurrency === 'DCR'
+          ? toSatoshis(formData.amount)
+          : fiatToSatoshis(formData.amount, fiatPrice);
+      addresses.push({
+        address: formData.address,
+        atoms: satoshisToSend,
+      })
+    }
+    //send amount
+    try {
+      const txResult = SendToMutilAddress(wallet, addresses)
+      if (txResult.tx && txResult.tx.hash) {
+        //broadcast tx to network
+        const broadCastData = await broadcastTx(txResult.hex, 0)
+        toast(
+          <SentLink
+            href={`${getExplorerURL()}/tx/` + broadCastData.data}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Decred sent
+          </SentLink >,
+          {
+            icon: CashReceivedNotificationIcon,
+          },
+        );
+        clearInputForms();
+      }
+    } catch (err) {
+      toast.error(err)
+    }
+  }
 
   return (
     <>
+      {isModalVisible && (
+        <Modal
+          title="Confirm Send"
+          description={
+            isOneToManyXECSend
+              ? `Send
+                ${multiSendTotal.toLocaleString(userLocale, {
+                maximumFractionDigits: 2,
+              })} 
+                                DCR to multiple recipients?`
+              : `Send ${formData.amount}${' '}
+                  ${selectedCurrency} to ${parsedAddressInput.address.value}`
+          }
+          handleOk={handleOk}
+          handleCancel={handleCancel}
+          showCancelButton
+        />
+      )}
       <SwitchContainer>
         <Switch
           name="Toggle Multisend"
@@ -197,20 +486,10 @@ const SendDCR = ({ addressInput = '' }) => {
                 placeholder={`Address`}
                 name="address"
                 value={formData.address}
-                disabled={txInfoFromUrl !== false}
                 handleInput={handleAddressChange}
                 error={sendAddressError}
                 loadWithScannerOpen={false}
               />
-              <AliasAddressPreviewLabel>
-                <TxLink
-                  key="lsadkgjskdgsdgsdgasdsdg"
-                  href="#"
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                </TxLink>
-              </AliasAddressPreviewLabel>
             </InputAndAliasPreviewHolder>
             <SendXecInput
               name="amount"
@@ -234,32 +513,13 @@ const SendDCR = ({ addressInput = '' }) => {
           />
         </SendToManyHolder>
       </InputModesHolder>
-      <SendXecForm>
-        <SendXecRow>
-          <SwitchAndLabel>
-            <Switch
-              name="Toggle Cashtab Msg"
-              on="✉️"
-              off="✉️"
-              checked={false}
-              disabled={false}
-            />
-            <SwitchLabel>Cashtab Msg</SwitchLabel>
-          </SwitchAndLabel>
-        </SendXecRow>
-        <SendXecRow>
-          <SwitchAndLabel>
-            <Switch
-              name="Toggle op_return_raw"
-              checked={sendWithOpReturnRaw}
-              disabled={false}
-            />
-            <SwitchLabel>op_return_raw</SwitchLabel>
-          </SwitchAndLabel>
-        </SendXecRow>
-      </SendXecForm>
-
       <AmountPreviewCtn>
+        {feeEstimate ? (
+          <ConvertAmount>Fee (Estimate): {(selectedCurrency === appConfig.ticker ? toDCR(feeEstimate) : (toDCR(feeEstimate) * fiatPrice).toLocaleString(userLocale, {
+            minimumFractionDigits: appConfig.cashDecimals,
+            maximumFractionDigits: appConfig.cashDecimals,
+          })) + ' ' + selectedCurrency}</ConvertAmount>
+        ) : (<></>)}
         {isOneToManyXECSend ? (
           <LocaleFormattedValue>
             {formatBalance(multiSendTotal, userLocale) +
@@ -284,7 +544,10 @@ const SendDCR = ({ addressInput = '' }) => {
       </AmountPreviewCtn>
       <PrimaryButton
         style={{ marginTop: '12px' }}
-        disabled={false}
+        disabled={disableSendButton}
+        onClick={() => {
+          checkForConfirmationBeforeSendXec();
+        }}
       >
         Send
       </PrimaryButton>

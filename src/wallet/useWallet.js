@@ -415,7 +415,7 @@ const useWallet = () => {
             if (tens > prevTens) {
                 // We have passed a $10 milestone
                 toast(
-                    `XEC is now ${supportedFiatCurrencies[
+                    `DCR is now ${supportedFiatCurrencies[
                         decredState.settings.fiatCurrency
                     ].symbol
                     }${fiatPrice} ${decredState.settings.fiatCurrency.toUpperCase()}`,

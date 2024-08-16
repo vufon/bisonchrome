@@ -3,7 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 import { BN } from 'slp-mdm';
-import { toDCR, toSatoshis } from '../wallet';
+import { getNetworkName, toDCR, toSatoshis } from '../wallet';
 import * as bip39 from 'bip39';
 import {
     CashtabSettings,
@@ -13,8 +13,9 @@ import appConfig from '../config/app';
 import { fiatToSatoshis } from '../wallet/index';
 import { UNKNOWN_TOKEN_ID } from '../config/CashtabCache';
 import { STRINGIFIED_DECIMALIZED_REGEX } from '../wallet/index';
-import { DerivationPath } from '../utils/const';
+import { DerivationPath, NetworkInfo } from '../utils/const';
 import * as Decred from 'decredjs-lib'
+import { opReturn } from '../config/opreturn';
 
 /**
  * Checks whether the instantiated sideshift library object has loaded
@@ -74,6 +75,92 @@ export const validateMnemonic = (
         return false;
     }
 };
+
+export function parseAddressInput(
+    addressInput,
+    balanceSats,
+    userLocale = appConfig.defaultLocale,
+) {
+    // Build return obj
+    const parsedAddressInput = {
+        address: { value: null, error: false, isAlias: false },
+    };
+
+    // Reject non-string input
+    if (typeof addressInput !== 'string') {
+        parsedAddressInput.address.error = 'Address must be a string';
+        return parsedAddressInput;
+    }
+
+    // Parse address string for parameters
+    const paramCheck = addressInput.split('?');
+
+    let cleanAddress = paramCheck[0];
+
+    // Set cleanAddress to addressInfo.address.value even if validation fails
+    // If there is an error, this will be set later
+    parsedAddressInput.address.value = cleanAddress;
+
+    // Validate address
+    const isValidAddr = Decred.Address.isValid(cleanAddress, getNetworkName())
+    // Is this valid address?
+    if (!isValidAddr) {
+        parsedAddressInput.address.error = `Invalid address`;
+    }
+
+    // Check for parameters
+    if (paramCheck.length > 1) {
+        // add other keys
+
+        const queryString = paramCheck[1];
+        parsedAddressInput.queryString = { value: queryString, error: false };
+
+        // Note that URLSearchParams is not an array
+        // https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams
+        const addrParams = new URLSearchParams(queryString);
+
+        // Check for duplicated params
+        const duplicatedParams =
+            new Set(addrParams.keys()).size !==
+            Array.from(addrParams.keys()).length;
+
+        if (duplicatedParams) {
+            // In this case, we can't pass any values back for supported params,
+            // without changing the shape of addressInfo
+            parsedAddressInput.queryString.error = `bip21 parameters may not appear more than once`;
+            return parsedAddressInput;
+        }
+
+        const supportedParams = ['amount', 'op_return_raw'];
+
+        // Iterate over params to check for valid and/or invalid params
+        for (const paramKeyValue of addrParams) {
+            const paramKey = paramKeyValue[0];
+            if (!supportedParams.includes(paramKey)) {
+                // queryString error
+                // Keep parsing for other params though
+                parsedAddressInput.queryString.error = `Unsupported param "${paramKey}"`;
+            }
+            if (paramKey === 'amount') {
+                // Handle Cashtab-supported bip21 param 'amount'
+                const amount = paramKeyValue[1];
+                parsedAddressInput.amount = { value: amount, error: false };
+
+                const validXecSendAmount = isValidXecSendAmount(
+                    amount,
+                    balanceSats,
+                    userLocale,
+                );
+                if (validXecSendAmount !== true) {
+                    // If the result of isValidXecSendAmount is not true, it is an error msg explaining wy
+                    parsedAddressInput.amount.error = validXecSendAmount;
+                }
+            }
+        }
+    }
+
+    return parsedAddressInput;
+}
 
 /**
  * Validate user input XEC send amount
@@ -353,8 +440,6 @@ export const shouldSendXecBeDisabled = (
     sendAmountError,
     sendAddressError,
     multiSendAddressError,
-    sendWithCashtabMsg,
-    cashtabMsgError,
     priceApiError,
     isOneToManyXECSend,
 ) => {
@@ -374,8 +459,6 @@ export const shouldSendXecBeDisabled = (
         sendAmountError !== false ||
         // Disabled if address fails validation
         sendAddressError !== false ||
-        // Disabled if msg fails validation AND we are sending the msg
-        (sendWithCashtabMsg && cashtabMsgError !== false) ||
         // Disabled if op_return_raw fails validation AND we are sending with op_return_raw
         // Disabled if we do not have a fiat price AND the user is attempting to send fiat
         priceApiError ||
@@ -437,6 +520,77 @@ export const isValidCashtabWallet = wallet => {
         typeof wallet.state.balanceSats === 'number' &&
         'Utxos' in wallet.state
     );
+};
+
+/**
+ * Validate user input on Send.js for multi-input mode
+ * @param {string} userMultisendInput formData.address from Send.js screen, validated for multi-send
+ * @param {number} balanceSats user wallet balance in satoshis
+ * @param {string} userLocale navigator.language, if available, or default if not
+ * @returns {boolean | string} true if is valid, error msg about why if not
+ */
+export const isValidMultiSendUserInput = (
+    userMultisendInput,
+    balanceSats,
+    userLocale,
+) => {
+    if (typeof userMultisendInput !== 'string') {
+        // In usage pairing to a form input, this should never happen
+        return 'Input must be a string';
+    }
+    if (userMultisendInput.trim() === '') {
+        return 'Input must not be blank';
+    }
+    let inputLines = userMultisendInput.split('\n');
+    let totalSendSatoshis = 0;
+    for (let i = 0; i < inputLines.length; i += 1) {
+        if (inputLines[i].trim() === '') {
+            return `Remove empty row at line ${i + 1}`;
+        }
+
+        const addressAndValueThisLine = inputLines[i].split(',');
+
+        const elementsThisLine = addressAndValueThisLine.length;
+
+        if (elementsThisLine < 2) {
+            return `Line ${
+                i + 1
+            } must have address and value, separated by a comma`;
+        } else if (elementsThisLine > 2) {
+            return `Line ${i + 1}: Comma can only separate address and value.`;
+        }
+
+        const address = addressAndValueThisLine[0].trim();
+        const isValidAddress = Decred.Address.isValid(address, getNetworkName())
+        if (!isValidAddress) {
+            return `Invalid address "${address}" at line ${i + 1}`;
+        }
+
+        const xecSendAmount = addressAndValueThisLine[1].trim();
+        const isValidValue = isValidXecSendAmount(xecSendAmount, balanceSats);
+
+        if (isValidValue !== true) {
+            // isValidXecSendAmount returns a string explaining the error if it does not return true
+            return `${isValidValue}: check value "${xecSendAmount}" at line ${
+                i + 1
+            }`;
+        }
+        // If it is valid, then we know it has appropriate decimal places
+        totalSendSatoshis += toSatoshis(Number(xecSendAmount));
+    }
+
+    if (totalSendSatoshis > balanceSats) {
+        return `Total amount sent (${toDCR(totalSendSatoshis).toLocaleString(
+            userLocale,
+            { minimumFractionDigits: appConfig.cashDecimals },
+        )} ${appConfig.ticker}) exceeds wallet balance of ${toDCR(
+            balanceSats,
+        ).toLocaleString(userLocale, {
+            minimumFractionDigits: appConfig.cashDecimals,
+        })} ${appConfig.ticker}`;
+    }
+    // If you make it here, all good
+    return true;
 };
 
 /**
