@@ -27,6 +27,8 @@ import { ReactComponent as XLogo } from '../../static/icons/xlogo.svg';
 import { ReactComponent as Dollar } from '../../static/icons/dollar.svg';
 import { ReactComponent as Facebook } from '../../static/icons/Facebook_Logo.svg';
 import { ReactComponent as Github } from '../../static/icons/github.svg';
+import { ReactComponent as Mined } from '../../static/icons/pickaxe.svg';
+import { ReactComponent as LinkSolid } from '../../static/icons/external-link-square-alt.svg';
 
 const Rotate = styled.div`
     transform: rotate(-45deg);
@@ -51,6 +53,22 @@ export const DollarIcon = () => <Dollar title="dollar sign" />;
 export const CashReceivedNotificationIcon = () => (
     <img height={'24px'} width={'24px'} src={appConfig.logo} />
 );
+const MineRotate = styled.div`
+    transform: rotate(45deg);
+`;
+
+export const MinedIcon = () => (
+    <MineRotate>
+        <Mined title="tx-mined" />
+    </MineRotate>
+);
+
+export const ThemedLinkSolid = styled(LinkSolid)`
+    fill: ${props => props.theme.contrast};
+    padding: 0.15rem 0rem 0.18rem 0rem;
+    height: 1.3em;
+    width: 1.3em;
+`;
 
 export const ThemedXIcon = styled(XLogo)`
     height: 42px;

@@ -274,3 +274,116 @@ export const getDumpAddress = () => {
             return DUMP_ADDRESS.MainnetAddr;
     }
 }
+
+export const parseTxData = (wallet, tx) => {
+    var result = {
+        txid: tx.txid,
+        confirmations: tx.confirmations,
+        time: tx.time
+    }
+    if (!wallet) {
+        return result
+    }
+    const walletState = getWalletState(wallet);
+    const { parsedTxHistory } = walletState;
+    var walletAddresses = []
+    const pathKeys = Object.keys(wallet.paths)
+    for (let i = 0; i < pathKeys.length; i++) {
+        const path = pathKeys[i]
+        const pathInfo = wallet.paths[path]
+        walletAddresses.push(pathInfo.address)
+    }
+    let isSend = false
+    tx.vin.forEach(indata => {
+        parsedTxHistory.forEach(txHistory => {
+            //if vin txid is transaction of wallet, is send transaction
+            if (indata.txid == txHistory.txid) {
+                //check txHistory with current vin data
+                const isOutputOfWallet = isOutputOfWalletAddress(indata.vout, txHistory.vout, walletAddresses)
+                if (isOutputOfWallet) {
+                    isSend = true
+                    return
+                }
+            }
+        })
+    })
+    //calculate tx fee
+    let vinTotal = 0
+    let voutTotal = 0
+    let vinData = []
+    let voutData = []
+    tx.vin.forEach(indata => {
+        const inValue = toSatoshis(indata.amountin)
+        vinTotal += inValue
+        vinData.push({
+            txid: indata.txid,
+            value: inValue,
+            vout: indata.vout
+        })
+    })
+    //define change amount
+    let receiveAmount = 0
+    tx.vout.forEach(out => {
+        const outValue = toSatoshis(out.value)
+        voutTotal += outValue
+        const address = out.scriptPubKey.addresses[0]
+        voutData.push({
+            address: address,
+            value: outValue,
+            n: out.n
+        })
+        if (existWalletAddressInVouts(out, walletAddresses)) {
+            receiveAmount += outValue
+        }
+    })
+    const fee = vinTotal - voutTotal
+    //calculate amount of transaction
+    let txAmount = 0
+    //if is send tx
+    if (isSend) {
+        txAmount = vinTotal - fee - receiveAmount
+    } else {
+        txAmount = receiveAmount
+    }
+    result.isSend = isSend
+    result.amount = txAmount
+    result.fee = fee
+    result.vin = vinData
+    result.vout = voutData
+    return result
+}
+
+const isOutputOfWalletAddress = (index, txVouts, walletAddresses) => {
+    if (index >= txVouts.length) {
+        return false
+    }
+    let isOutputOfWallet = false
+    const vout = txVouts[index]
+    vout.scriptPubKey.addresses.forEach(addr => {
+        //check addr in walletAddresses
+        walletAddresses.forEach(wAddr => {
+            if (addr == wAddr) {
+                isOutputOfWallet = true
+                return
+            }
+        })
+    })
+    return isOutputOfWallet
+}
+
+const existWalletAddressInVouts = (out, walletAddresses) => {
+    const addresses = out.scriptPubKey.addresses
+    if (!addresses || addresses.length < 1) {
+        return false
+    }
+    let exist = false
+    addresses.forEach(addr => {
+        walletAddresses.forEach(wAddr => {
+            if (wAddr == addr) {
+                exist = true
+                return
+            }
+        })
+    })
+    return exist
+}
