@@ -1,5 +1,8 @@
+import React from 'react';
 import { QRCode } from './QRCode';
 import styled from 'styled-components';
+import { WalletContext } from '../wallet/context';
+import { DerivationPath } from '../utils/const';
 const QrCodeCtn = styled.div``;
 
 export const ReceiveCtn = styled.div`
@@ -15,6 +18,10 @@ export const ReceiveCtn = styled.div`
 `;
 
 export default function AddressQR() {
+  const ContextValue = React.useContext(WalletContext);
+  const { decredState } = ContextValue;
+  const { wallets } = decredState;
+  const wallet = wallets.length > 0 ? wallets[0] : false;
   const width = 500
   const height = 600
   const getQrCodeWidth = windowWidthPx => {
@@ -35,13 +42,15 @@ export default function AddressQR() {
 
   return (
     <ReceiveCtn title="Receive">
-      <QrCodeCtn title="QR Code">
-        <QRCode
-          address="DsbnXmY5yud8MwenFQJEfabQfZDedakeuwY"
-          size={getQrCodeWidth(width)}
-          logoSizePx={width >= 500 ? 48 : 24}
-        />
-      </QrCodeCtn>
+      {wallet !== false && (
+        <QrCodeCtn title="QR Code">
+          <QRCode
+            address={wallet.paths[DerivationPath()].address}
+            size={getQrCodeWidth(width)}
+            logoSizePx={width >= 500 ? 48 : 24}
+          />
+        </QrCodeCtn>
+      )}
     </ReceiveCtn>
   )
 }

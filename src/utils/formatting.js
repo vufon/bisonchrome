@@ -127,6 +127,6 @@ export const toFormattedXec = (satoshis, userLocale) => {
         units = '';
     }
     return `${xecAmount.toLocaleString(userLocale, {
-        maximumFractionDigits: 2,
+        maximumFractionDigits: 4,
     })}${units}`;
 };

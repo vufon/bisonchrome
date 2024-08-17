@@ -3,23 +3,19 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 import { BN } from 'slp-mdm';
-import { toXec, toSatoshis } from 'wallet';
-import cashaddr from 'ecashaddrjs';
+import { getNetworkName, toDCR, toSatoshis } from '../wallet';
 import * as bip39 from 'bip39';
 import {
     CashtabSettings,
     cashtabSettingsValidation,
-} from 'config/cashtabSettings';
-import tokenBlacklist from 'config/tokenBlacklist';
-import appConfig from 'config/app';
-import { opReturn } from 'config/opreturn';
-import { getStackArray } from 'ecash-script';
-import aliasSettings from 'config/alias';
-import { getAliasByteCount } from 'opreturn';
-import { fiatToSatoshis } from 'wallet';
-import { UNKNOWN_TOKEN_ID } from 'config/CashtabCache';
-import { STRINGIFIED_DECIMALIZED_REGEX } from 'wallet';
-import { getMaxMintAmount } from 'slpv1';
+} from '../config/cashtabSettings';
+import appConfig from '../config/app';
+import { fiatToSatoshis } from '../wallet/index';
+import { UNKNOWN_TOKEN_ID } from '../config/CashtabCache';
+import { STRINGIFIED_DECIMALIZED_REGEX } from '../wallet/index';
+import { DerivationPath, NetworkInfo } from '../utils/const';
+import * as Decred from 'decredjs-lib'
+import { opReturn } from '../config/opreturn';
 
 /**
  * Checks whether the instantiated sideshift library object has loaded
@@ -36,46 +32,6 @@ export const isValidSideshiftObj = sideshiftObj => {
         typeof sideshiftObj.hide === 'function' &&
         typeof sideshiftObj.addEventListener === 'function'
     );
-};
-
-export const getContactAddressError = (address, contacts) => {
-    const isValidCashAddress = cashaddr.isValidCashAddress(address, 'ecash');
-    // We do not accept prefixless input
-    if (!address.startsWith('ecash:')) {
-        return `Addresses in Contacts must start with "ecash:" prefix`;
-    }
-    if (!isValidCashAddress) {
-        return `Invalid address`;
-    }
-    for (const contact of contacts) {
-        if (contact.address === address) {
-            return `${address.slice(6, 9)}...${address.slice(
-                -3,
-            )} already in Contacts`;
-        }
-    }
-    return false;
-};
-/**
- * Does a given string meet the spec of a valid ecash alias
- * See spec a doc/standards/ecash-alias.md
- * Note that an alias is only "valid" if it has been registered
- * So here, we are only testing spec compliance
- * @param {string} inputStr
- * @returns {true | string} true if isValid, string for reason why if not
- */
-export const meetsAliasSpec = inputStr => {
-    if (typeof inputStr !== 'string') {
-        return 'Alias input must be a string';
-    }
-    if (!/^[a-z0-9]+$/.test(inputStr)) {
-        return 'Alias may only contain lowercase characters a-z and 0-9';
-    }
-    const aliasByteCount = getAliasByteCount(inputStr);
-    if (aliasByteCount > aliasSettings.aliasMaxLength) {
-        return `Invalid bytecount ${aliasByteCount}. Alias be 1-21 bytes.`;
-    }
-    return true;
 };
 
 /**
@@ -102,23 +58,109 @@ export const isValidAliasSendInput = sendToAliasInput => {
 
 export const validateMnemonic = (
     mnemonic,
-    wordlist = bip39.wordlists.english,
+    wordlist = Decred.Mnemonic.Words.ENGLISH,
 ) => {
     try {
         if (!mnemonic || !wordlist) return false;
-
+         
         // Preprocess the words
         const words = mnemonic.split(' ');
         // Detect blank phrase
         if (words.length === 0) return false;
 
         // Check the words are valid
-        return bip39.validateMnemonic(mnemonic, wordlist);
+        return Decred.Mnemonic.isValid(mnemonic, wordlist)
     } catch (err) {
         console.error(err);
         return false;
     }
 };
+
+export function parseAddressInput(
+    addressInput,
+    balanceSats,
+    userLocale = appConfig.defaultLocale,
+) {
+    // Build return obj
+    const parsedAddressInput = {
+        address: { value: null, error: false, isAlias: false },
+    };
+
+    // Reject non-string input
+    if (typeof addressInput !== 'string') {
+        parsedAddressInput.address.error = 'Address must be a string';
+        return parsedAddressInput;
+    }
+
+    // Parse address string for parameters
+    const paramCheck = addressInput.split('?');
+
+    let cleanAddress = paramCheck[0];
+
+    // Set cleanAddress to addressInfo.address.value even if validation fails
+    // If there is an error, this will be set later
+    parsedAddressInput.address.value = cleanAddress;
+
+    // Validate address
+    const isValidAddr = Decred.Address.isValid(cleanAddress, getNetworkName())
+    // Is this valid address?
+    if (!isValidAddr) {
+        parsedAddressInput.address.error = `Invalid address`;
+    }
+
+    // Check for parameters
+    if (paramCheck.length > 1) {
+        // add other keys
+
+        const queryString = paramCheck[1];
+        parsedAddressInput.queryString = { value: queryString, error: false };
+
+        // Note that URLSearchParams is not an array
+        // https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams
+        const addrParams = new URLSearchParams(queryString);
+
+        // Check for duplicated params
+        const duplicatedParams =
+            new Set(addrParams.keys()).size !==
+            Array.from(addrParams.keys()).length;
+
+        if (duplicatedParams) {
+            // In this case, we can't pass any values back for supported params,
+            // without changing the shape of addressInfo
+            parsedAddressInput.queryString.error = `bip21 parameters may not appear more than once`;
+            return parsedAddressInput;
+        }
+
+        const supportedParams = ['amount', 'op_return_raw'];
+
+        // Iterate over params to check for valid and/or invalid params
+        for (const paramKeyValue of addrParams) {
+            const paramKey = paramKeyValue[0];
+            if (!supportedParams.includes(paramKey)) {
+                // queryString error
+                // Keep parsing for other params though
+                parsedAddressInput.queryString.error = `Unsupported param "${paramKey}"`;
+            }
+            if (paramKey === 'amount') {
+                // Handle Cashtab-supported bip21 param 'amount'
+                const amount = paramKeyValue[1];
+                parsedAddressInput.amount = { value: amount, error: false };
+
+                const validXecSendAmount = isValidXecSendAmount(
+                    amount,
+                    balanceSats,
+                    userLocale,
+                );
+                if (validXecSendAmount !== true) {
+                    // If the result of isValidXecSendAmount is not true, it is an error msg explaining wy
+                    parsedAddressInput.amount.error = validXecSendAmount;
+                }
+            }
+        }
+    }
+
+    return parsedAddressInput;
+}
 
 /**
  * Validate user input XEC send amount
@@ -169,33 +211,18 @@ export const isValidXecSendAmount = (
         return 'Amount must be greater than 0';
     }
     if (sendAmountSatoshis < appConfig.dustSats) {
-        return `Send amount must be at least ${toXec(appConfig.dustSats)} ${
-            appConfig.ticker
-        }`;
+        return `Send amount must be at least ${toDCR(appConfig.dustSats)} ${appConfig.ticker
+            }`;
     }
     if (sendAmountSatoshis > balanceSats) {
-        return `Amount ${toXec(sendAmountSatoshis).toLocaleString(userLocale, {
+        return `Amount ${toDCR(sendAmountSatoshis).toLocaleString(userLocale, {
             minimumFractionDigits: appConfig.cashDecimals,
-        })} ${appConfig.ticker} exceeds wallet balance of ${toXec(
+        })} ${appConfig.ticker} exceeds wallet balance of ${toDCR(
             balanceSats,
-        ).toLocaleString(userLocale, { minimumFractionDigits: 2 })} ${
-            appConfig.ticker
-        }`;
+        ).toLocaleString(userLocale, { minimumFractionDigits: 2 })} ${appConfig.ticker
+            }`;
     }
     return true;
-};
-
-export const isProbablyNotAScam = tokenNameOrTicker => {
-    // convert to lower case, trim leading and trailing spaces
-    // split, filter then join on ' ' for cases where user inputs multiple spaces
-    const sanitized = tokenNameOrTicker
-        .toLowerCase()
-        .trim()
-        .split(' ')
-        .filter(string => string)
-        .join(' ');
-
-    return !tokenBlacklist.includes(sanitized);
 };
 
 export const isValidTokenName = tokenName => {
@@ -222,11 +249,11 @@ export const isValidTokenDecimals = tokenDecimals => {
 
 const TOKEN_DOCUMENT_URL_REGEX = new RegExp(
     '^(https?:\\/\\/)?' + // protocol (optional)
-        '((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|' + // domain name
-        '((\\d{1,3}\\.){3}\\d{1,3}))' + // OR ip (v4) address
-        '(\\:\\d+)?(\\/[-a-z\\d%_().~+]*)*' + // port and path
-        '(\\?[;&a-z\\d%_.~+=-]*)?' + // query string
-        '(\\#[-a-z\\d_]*)?$',
+    '((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|' + // domain name
+    '((\\d{1,3}\\.){3}\\d{1,3}))' + // OR ip (v4) address
+    '(\\:\\d+)?(\\/[-a-z\\d%_().~+]*)*' + // port and path
+    '(\\?[;&a-z\\d%_.~+=-]*)?' + // query string
+    '(\\#[-a-z\\d_]*)?$',
     'i',
 ); // fragment locator
 
@@ -295,43 +322,6 @@ export const migrateLegacyCashtabSettings = settings => {
         }
     }
     return settings;
-};
-
-/**
- * Check if an array is a valid Cashtab contact list
- * A valid contact list is an array of objects
- * An empty contact list looks like [{}]
- * @param {array} contactList
- * @returns {bool}
- */
-export const isValidContactList = contactList => {
-    if (!Array.isArray(contactList)) {
-        return false;
-    }
-    for (const contact of contactList) {
-        // Must have keys 'address' and 'name'
-        if (
-            typeof contact === 'object' &&
-            'address' in contact &&
-            'name' in contact
-        ) {
-            // Address must be a valid XEC address, name must be a string
-            const { address, name } = contact;
-            if (
-                (cashaddr.isValidCashAddress(address, 'ecash') ||
-                    isValidAliasSendInput(address)) &&
-                typeof name === 'string'
-            ) {
-                // This contact is valid
-                continue;
-            }
-            // Any single invalid contact makes the whole list invalid
-            return false;
-        }
-        return false;
-    }
-    // If you get here, it's good
-    return true;
 };
 
 /**
@@ -429,31 +419,107 @@ export const isValidXecAirdrop = xecAirdrop => {
 };
 
 /**
- * Parse user input of addresses to exclude in an airdrop tx
- * @param {array} airdropExclusionArray
+ * Should the Send button be disabled on the SendXec screen
+ * @param {object} formData must have keys address: string and value: string
+ * @param {number} balanceSats
+ * @param {boolean} apiError
+ * @param {false | string} sendAmountError
+ * @param {false | string} sendAddressError
+ * @param {boolean} sendWithCashtabMsg
+ * @param {false | string} cashtabMsgError
+ * @param {boolean} sendWithOpReturnRaw
+ * @param {false | string} opReturnRawError
+ * @param {boolean} priceApiError
+ * @param {boolean} isOneToManyXECSend
+ * @returns boolean
+ */
+export const shouldSendXecBeDisabled = (
+    formData,
+    balanceSats,
+    apiError,
+    sendAmountError,
+    sendAddressError,
+    multiSendAddressError,
+    priceApiError,
+    isOneToManyXECSend,
+) => {
+    return (
+        // Disabled if no user inputs
+        (formData.multiAddressInput === '' &&
+            formData.amount === '' &&
+            formData.address === '') ||
+        // Disabled if we are on SendToOne mode and address or amount is blank
+        (!isOneToManyXECSend &&
+            (formData.amount === '' || formData.address === '')) ||
+        // Disabled if user has no balance
+        balanceSats === 0 ||
+        // Disabled if apiError (wallet unable to sync utxo set with chronik)
+        apiError ||
+        // Disabled if send amount fails validation
+        sendAmountError !== false ||
+        // Disabled if address fails validation
+        sendAddressError !== false ||
+        // Disabled if op_return_raw fails validation AND we are sending with op_return_raw
+        // Disabled if we do not have a fiat price AND the user is attempting to send fiat
+        priceApiError ||
+        // Disabled if send to many and we have a send to many validation error
+        (isOneToManyXECSend && multiSendAddressError !== false) ||
+        // Disabled if send to many and send to many input is blank
+        (isOneToManyXECSend && formData.multiAddressInput === '')
+    );
+};
+
+/**
+ * Determine if a given object is a valid Cashtab wallet
+ * @param {object} wallet Cashtab wallet object
  * @returns {boolean}
  */
-export const isValidAirdropExclusionArray = airdropExclusionArray => {
-    if (!airdropExclusionArray || airdropExclusionArray.length === 0) {
+export const isValidCashtabWallet = wallet => {
+    if (wallet === false) {
+        // Unset cashtab wallet
         return false;
     }
+    if (typeof wallet !== 'object') {
+        // Wallet must be an object
+        return false;
+    }
+    if (!('paths' in wallet)) {
+        return false;
+    }
+    if (Object.keys(wallet.paths).length < 1) {
+        // Wallet must have at least one path info object
+        return false;
+    }
+    // Validate each path
+    // We use pathsValid as a flag as `return false` from a forEach does not do what you think it does
+    let pathsValid = true;
+    // Return false if we do not have Path1899
+    // This also handles the case of a JSON-activated pre-2.9.0 wallet
 
-    let isValid = true;
-
-    // split by comma as the delimiter
-    const addressStringArray = airdropExclusionArray.split(',');
-
-    // parse and validate each address in array
-    for (const address of addressStringArray) {
-        if (
-            !address.startsWith('ecash') ||
-            !cashaddr.isValidCashAddress(address, 'ecash')
-        ) {
-            return false;
+    if (typeof wallet.paths[DerivationPath()] === 'undefined') {
+        return false;
+    }
+    for (var key in wallet.paths) {
+        const value = wallet.paths[key]
+        if (!('address' in value) || !('wif' in value)) {
+            // If any given path does not have all of these keys, the wallet is invalid
+            pathsValid = false;
         }
     }
-
-    return isValid;
+    if (!pathsValid) {
+        // Invalid path
+        return false;
+    }
+    return (
+        typeof wallet === 'object' &&
+        'state' in wallet &&
+        'mnemonic' in wallet &&
+        'name' in wallet &&
+        typeof wallet.state === 'object' &&
+        'balanceSats' in wallet.state &&
+        typeof wallet.state.balanceSats === 'number' &&
+        'Utxos' in wallet.state
+    );
 };
 
 /**
@@ -495,14 +561,12 @@ export const isValidMultiSendUserInput = (
         }
 
         const address = addressAndValueThisLine[0].trim();
-        const isValidAddress = cashaddr.isValidCashAddress(address, 'ecash');
-
+        const isValidAddress = Decred.Address.isValid(address, getNetworkName())
         if (!isValidAddress) {
             return `Invalid address "${address}" at line ${i + 1}`;
         }
 
         const xecSendAmount = addressAndValueThisLine[1].trim();
-
         const isValidValue = isValidXecSendAmount(xecSendAmount, balanceSats);
 
         if (isValidValue !== true) {
@@ -516,10 +580,10 @@ export const isValidMultiSendUserInput = (
     }
 
     if (totalSendSatoshis > balanceSats) {
-        return `Total amount sent (${toXec(totalSendSatoshis).toLocaleString(
+        return `Total amount sent (${toDCR(totalSendSatoshis).toLocaleString(
             userLocale,
             { minimumFractionDigits: appConfig.cashDecimals },
-        )} ${appConfig.ticker}) exceeds wallet balance of ${toXec(
+        )} ${appConfig.ticker}) exceeds wallet balance of ${toDCR(
             balanceSats,
         ).toLocaleString(userLocale, {
             minimumFractionDigits: appConfig.cashDecimals,
@@ -527,315 +591,6 @@ export const isValidMultiSendUserInput = (
     }
     // If you make it here, all good
     return true;
-};
-
-const VALID_LOWERCASE_HEX_REGEX = /^[a-f0-9]+$/;
-/**
- * Validate bip21 op_return_raw input
- * @param {string} opReturnRaw user input (or webapp tx input) for bip21 op_return_raw
- * @returns {boolean | string} true if valid, string error msg if not
- */
-export const getOpReturnRawError = opReturnRaw => {
-    if (opReturnRaw === '') {
-        return 'Cashtab will not send an empty op_return_raw';
-    }
-    if (opReturnRaw.startsWith(opReturn.opReturnPrefixHex)) {
-        return `op_return_raw will have OP_RETURN (6a) prepended automatically`;
-    }
-    if (!VALID_LOWERCASE_HEX_REGEX.test(opReturnRaw)) {
-        return `Input must be lowercase hex a-f 0-9.`;
-    }
-    const BYTE_LENGTH_HEX = 2;
-    if (
-        opReturnRaw.length / BYTE_LENGTH_HEX >
-        opReturn.opreturnParamByteLimit
-    ) {
-        return `op_return_raw exceeds ${opReturn.opreturnParamByteLimit} bytes`;
-    }
-    if (opReturnRaw.length % BYTE_LENGTH_HEX !== 0) {
-        return `op_return_raw input must be in hex bytes. Length of input must be divisible by two.`;
-    }
-    if (!nodeWillAcceptOpReturnRaw(opReturnRaw)) {
-        return 'Invalid OP_RETURN';
-    }
-    // No error
-    return false;
-};
-
-/**
- * Test a bip21 op_return_raw param to see if an eCash node will accept it
- * @param {string} opReturnRaw
- * @returns {bool}
- */
-export const nodeWillAcceptOpReturnRaw = opReturnRaw => {
-    try {
-        if (opReturnRaw === '') {
-            // No empty OP_RETURN for this param per ecash bip21 spec
-            return false;
-        }
-
-        // Use validation from ecash-script library
-        // Apply .toLowerCase() to support uppercase, lowercase, or mixed case input
-        getStackArray(
-            `${opReturn.opReturnPrefixHex}${opReturnRaw.toLowerCase()}`,
-        );
-
-        return true;
-    } catch (err) {
-        return false;
-    }
-};
-
-/**
- * Should the Send button be disabled on the SendXec screen
- * @param {object} formData must have keys address: string and value: string
- * @param {number} balanceSats
- * @param {boolean} apiError
- * @param {false | string} sendAmountError
- * @param {false | string} sendAddressError
- * @param {boolean} sendWithCashtabMsg
- * @param {false | string} cashtabMsgError
- * @param {boolean} sendWithOpReturnRaw
- * @param {false | string} opReturnRawError
- * @param {boolean} priceApiError
- * @param {boolean} isOneToManyXECSend
- * @returns boolean
- */
-export const shouldSendXecBeDisabled = (
-    formData,
-    balanceSats,
-    apiError,
-    sendAmountError,
-    sendAddressError,
-    multiSendAddressError,
-    sendWithCashtabMsg,
-    cashtabMsgError,
-    sendWithOpReturnRaw,
-    opReturnRawError,
-    priceApiError,
-    isOneToManyXECSend,
-) => {
-    return (
-        // Disabled if no user inputs
-        (formData.multiAddressInput === '' &&
-            formData.amount === '' &&
-            formData.address === '') ||
-        // Disabled if we are on SendToOne mode and address or amount is blank
-        (!isOneToManyXECSend &&
-            (formData.amount === '' || formData.address === '')) ||
-        // Disabled if user has no balance
-        balanceSats === 0 ||
-        // Disabled if apiError (wallet unable to sync utxo set with chronik)
-        apiError ||
-        // Disabled if send amount fails validation
-        sendAmountError !== false ||
-        // Disabled if address fails validation
-        sendAddressError !== false ||
-        // Disabled if msg fails validation AND we are sending the msg
-        (sendWithCashtabMsg && cashtabMsgError !== false) ||
-        // Disabled if op_return_raw fails validation AND we are sending with op_return_raw
-        (sendWithOpReturnRaw && opReturnRawError !== false) ||
-        // Disabled if we do not have a fiat price AND the user is attempting to send fiat
-        priceApiError ||
-        // Disabled if send to many and we have a send to many validation error
-        (isOneToManyXECSend && multiSendAddressError !== false) ||
-        // Disabled if send to many and send to many input is blank
-        (isOneToManyXECSend && formData.multiAddressInput === '')
-    );
-};
-
-/**
- * Parse an address string with bip21 params for use in Cashtab
- * @param {string} addressString User input into the send field of Cashtab.
- * Must be validated for bip21 and Cashtab supported features
- * For now, Cashtab supports only
- * amount - amount to be sent in XEC
- * opreturn - raw hex for opreturn output
- * @param {number} balanceSats user wallet balance in satoshis
- * @param {string} userLocale navigator.language if available, or default value if not
- * @returns {object} addressInfo. Object with parsed params designed for use in Send.js
- */
-export function parseAddressInput(
-    addressInput,
-    balanceSats,
-    userLocale = appConfig.defaultLocale,
-) {
-    // Build return obj
-    const parsedAddressInput = {
-        address: { value: null, error: false, isAlias: false },
-    };
-
-    // Reject non-string input
-    if (typeof addressInput !== 'string') {
-        parsedAddressInput.address.error = 'Address must be a string';
-        return parsedAddressInput;
-    }
-
-    // Parse address string for parameters
-    const paramCheck = addressInput.split('?');
-
-    let cleanAddress = paramCheck[0];
-
-    // Set cleanAddress to addressInfo.address.value even if validation fails
-    // If there is an error, this will be set later
-    parsedAddressInput.address.value = cleanAddress;
-
-    // Validate address
-    const isValidAddr = cashaddr.isValidCashAddress(cleanAddress, 'ecash');
-
-    // Is this valid address?
-    if (!isValidAddr) {
-        // Check if this is an alias address
-        if (isValidAliasSendInput(cleanAddress) !== true) {
-            if (meetsAliasSpec(cleanAddress) === true) {
-                // If it would be a valid alias except for the missing '.xec', this is a useful validation error
-                parsedAddressInput.address.error = `Aliases must end with '.xec'`;
-                parsedAddressInput.address.isAlias = true;
-            } else if (cashaddr.isValidCashAddress(cleanAddress, 'etoken')) {
-                // If it is, though, a valid eToken address
-                parsedAddressInput.address.error = `eToken addresses are not supported for ${appConfig.ticker} sends`;
-            } else {
-                // If your address is not a valid address and not a valid alias format
-                parsedAddressInput.address.error = `Invalid address`;
-            }
-        } else {
-            parsedAddressInput.address.isAlias = true;
-        }
-    }
-
-    // Check for parameters
-    if (paramCheck.length > 1) {
-        // add other keys
-
-        const queryString = paramCheck[1];
-        parsedAddressInput.queryString = { value: queryString, error: false };
-
-        // Note that URLSearchParams is not an array
-        // https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams
-        const addrParams = new URLSearchParams(queryString);
-
-        // Check for duplicated params
-        const duplicatedParams =
-            new Set(addrParams.keys()).size !==
-            Array.from(addrParams.keys()).length;
-
-        if (duplicatedParams) {
-            // In this case, we can't pass any values back for supported params,
-            // without changing the shape of addressInfo
-            parsedAddressInput.queryString.error = `bip21 parameters may not appear more than once`;
-            return parsedAddressInput;
-        }
-
-        const supportedParams = ['amount', 'op_return_raw'];
-
-        // Iterate over params to check for valid and/or invalid params
-        for (const paramKeyValue of addrParams) {
-            const paramKey = paramKeyValue[0];
-            if (!supportedParams.includes(paramKey)) {
-                // queryString error
-                // Keep parsing for other params though
-                parsedAddressInput.queryString.error = `Unsupported param "${paramKey}"`;
-            }
-            if (paramKey === 'amount') {
-                // Handle Cashtab-supported bip21 param 'amount'
-                const amount = paramKeyValue[1];
-                parsedAddressInput.amount = { value: amount, error: false };
-
-                const validXecSendAmount = isValidXecSendAmount(
-                    amount,
-                    balanceSats,
-                    userLocale,
-                );
-                if (validXecSendAmount !== true) {
-                    // If the result of isValidXecSendAmount is not true, it is an error msg explaining wy
-                    parsedAddressInput.amount.error = validXecSendAmount;
-                }
-            }
-            if (paramKey === 'op_return_raw') {
-                // Handle Cashtab-supported bip21 param 'op_return_raw'
-                const opreturnParam = paramKeyValue[1];
-                parsedAddressInput.op_return_raw = {
-                    value: opreturnParam,
-                    error: false,
-                };
-                const opReturnRawError = getOpReturnRawError(opreturnParam);
-                if (opReturnRawError !== false) {
-                    // If we have an invalid op_return_raw param, set error
-                    parsedAddressInput.op_return_raw.error = `Invalid op_return_raw param: ${opReturnRawError}`;
-                }
-            }
-        }
-    }
-
-    return parsedAddressInput;
-}
-
-/**
- * Determine if a given object is a valid Cashtab wallet
- * @param {object} wallet Cashtab wallet object
- * @returns {boolean}
- */
-export const isValidCashtabWallet = wallet => {
-    if (wallet === false) {
-        // Unset cashtab wallet
-        return false;
-    }
-    if (typeof wallet !== 'object') {
-        // Wallet must be an object
-        return false;
-    }
-    if (!('paths' in wallet)) {
-        return false;
-    }
-    if (Array.isArray(wallet.paths)) {
-        // wallet.paths should be a map
-        return false;
-    }
-    if (wallet.paths.size < 1) {
-        // Wallet must have at least one path info object
-        return false;
-    }
-    // Validate each path
-    // We use pathsValid as a flag as `return false` from a forEach does not do what you think it does
-    let pathsValid = true;
-    // Return false if we do not have Path1899
-    // This also handles the case of a JSON-activated pre-2.9.0 wallet
-
-    if (typeof wallet.paths.get(1899) === 'undefined') {
-        return false;
-    }
-    wallet.paths.forEach((value, key) => {
-        if (typeof key !== 'number') {
-            // Wallet is invalid if key is not a number
-            pathsValid = false;
-        }
-        if (!('hash' in value) || !('address' in value) || !('wif' in value)) {
-            // If any given path does not have all of these keys, the wallet is invalid
-            pathsValid = false;
-        }
-    });
-    if (!pathsValid) {
-        // Invalid path
-        return false;
-    }
-    return (
-        typeof wallet === 'object' &&
-        'state' in wallet &&
-        'mnemonic' in wallet &&
-        'name' in wallet &&
-        !('Path145' in wallet) &&
-        !('Path245' in wallet) &&
-        !('Path1899' in wallet) &&
-        typeof wallet.state === 'object' &&
-        'balanceSats' in wallet.state &&
-        typeof wallet.state.balanceSats === 'number' &&
-        !('balances' in wallet.state) &&
-        'slpUtxos' in wallet.state &&
-        'nonSlpUtxos' in wallet.state &&
-        'tokens' in wallet.state &&
-        !('hydratedUtxoDetails' in wallet.state) &&
-        !('slpBalancesAndUtxos' in wallet.state)
-    );
 };
 
 /**
@@ -876,54 +631,10 @@ export const isValidTokenSendOrBurnAmount = (
             if (decimals === 0) {
                 return `This token does not support decimal places`;
             }
-            return `This token supports no more than ${decimals} decimal place${
-                decimals === 1 ? '' : 's'
-            }`;
+            return `This token supports no more than ${decimals} decimal place${decimals === 1 ? '' : 's'
+                }`;
         }
     }
-    return true;
-};
-
-/**
- * Validate a token mint qty
- * Same as isValidTokenSendOrBurnAmount except we do not care about baalnce
- * @param {string} amount decimalized token string of mint amount, from user input, e.g. 100.123
- * @param {number} decimals 0, 1, 2, 3, 4, 5, 6, 7, 8, or 9
- */
-export const isValidTokenMintAmount = (amount, decimals) => {
-    if (typeof amount !== 'string') {
-        return 'Amount must be a string';
-    }
-    if (amount === '') {
-        return 'Amount is required';
-    }
-    if (amount === '0') {
-        return `Amount must be greater than 0`;
-    }
-    if (!STRINGIFIED_DECIMALIZED_REGEX.test(amount) || amount.length === 0) {
-        return `Amount must be a non-empty string containing only decimal numbers and optionally one decimal point "."`;
-    }
-    // Note: we do not validate decimals, as this is coming from token cache, which is coming from chronik
-    // The user is not inputting decimals
-
-    if (amount.includes('.')) {
-        if (amount.toString().split('.')[1].length > decimals) {
-            if (decimals === 0) {
-                return `This token does not support decimal places`;
-            }
-            return `This token supports no more than ${decimals} decimal place${
-                decimals === 1 ? '' : 's'
-            }`;
-        }
-    }
-    // Amount must be <= 0xffffffffffffffff in token satoshis for this token decimals
-    const amountBN = new BN(amount);
-    // Returns 1 if greater, -1 if less, 0 if the same, null if n/a
-    const maxMintAmount = getMaxMintAmount(decimals);
-    if (amountBN.gt(maxMintAmount)) {
-        return `Amount ${amount} exceeds max mint amount for this token (${maxMintAmount})`;
-    }
-
     return true;
 };
 
@@ -947,4 +658,51 @@ export const getContactNameError = (name, contacts) => {
         }
     }
     return false;
+};
+
+export const getContactAddressError = (address, contacts) => {
+    //TODO: Check valid address
+    // We do not accept prefixless input
+    for (const contact of contacts) {
+        if (contact.address === address) {
+            return `${address.slice(6, 9)}...${address.slice(
+                -3,
+            )} already in Contacts`;
+        }
+    }
+    return false;
+};
+
+/**
+ * Check if an array is a valid Cashtab contact list
+ * A valid contact list is an array of objects
+ * An empty contact list looks like [{}]
+ * @param {array} contactList
+ * @returns {bool}
+ */
+export const isValidContactList = contactList => {
+    if (!Array.isArray(contactList)) {
+        return false;
+    }
+    for (const contact of contactList) {
+        // Must have keys 'address' and 'name'
+        if (
+            typeof contact === 'object' &&
+            'address' in contact &&
+            'name' in contact
+        ) {
+            // Address must be a valid XEC address, name must be a string
+            const { address, name } = contact;
+            //TODO: check valid address of wallet
+            if (typeof name === 'string') {
+                // This contact is valid
+                continue;
+            }
+            // Any single invalid contact makes the whole list invalid
+            return false;
+        }
+        return false;
+    }
+    // If you get here, it's good
+    return true;
 };

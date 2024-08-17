@@ -360,7 +360,7 @@ export const SendXecInput = ({
                     onChange={e => handleSelect(e)}
                     disabled={selectDisabled}
                 >
-                    <CurrencyOption data-testid="xec-option" value="XEC">
+                    <CurrencyOption data-testid="xec-option" value="DCR">
                         DCR
                     </CurrencyOption>
                     <CurrencyOption data-testid="fiat-option" value={fiatCode}>

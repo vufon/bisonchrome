@@ -1,21 +1,25 @@
 // Copyright (c) 2023-2024 The Bitcoin developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
-
+import mainLogo from '../static/images/logo-icon.png';
 // App settings not adjustable by the user
 const appConfig = {
     name: 'Decred',
     ticker: 'DCR',
-    derivationPath: 1899,
-    legacyPrefix: 'bitcoincash',
-    coingeckoId: 'ecash',
+    derivationPath: 42,
+    testDerivationPath: 1,
+    seedwords: 33, //17 or 33
+    network: 'testnet',
+    logo: mainLogo,
+    legacyPrefix: 'decred',
+    exchangeId: 'decred',
     fiatUpdateIntervalMs: 90000,
     defaultFee: 2010, // satoshis per kb
     minFee: 1000, // satoshis per kb
-    dustSats: 546,
-    cashDecimals: 2,
+    dustSats: 500000,
+    cashDecimals: 8,
     fiatDecimals: 2,
-    pricePrecisionDecimals: 8,
+    pricePrecisionDecimals: 2,
     tokenName: 'eToken',
     tokenTicker: 'eToken',
     localStorageMaxCharacters: 24,
