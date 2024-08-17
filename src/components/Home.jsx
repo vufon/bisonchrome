@@ -2,7 +2,7 @@ import BackupWallet from "./BackupWallet";
 import AddressQR from "./AddressQR";
 import { WalletContext } from "../wallet/context";
 import React from "react";
-import { getWalletState } from "../wallet";
+import { cleanParsedTxHistory, getWalletState } from "../wallet";
 import { getUserLocale } from "../utils/helpers";
 import TxHistory from "./home/TxHistory";
 import styled from 'styled-components';
@@ -26,13 +26,14 @@ export default function Home({ setPage }) {
   const wallet = wallets.length > 0 ? wallets[0] : false;
   const walletState = getWalletState(wallet);
   const { parsedTxHistory } = walletState;
+  const txHistories = cleanParsedTxHistory(parsedTxHistory)
   const hasHistory = parsedTxHistory && parsedTxHistory.length > 0;
   const userLocale = getUserLocale(navigator);
   return (
     <>
       <TxHistoryCtn>
         <TxHistory
-          txs={Array.isArray(parsedTxHistory) ? parsedTxHistory : []}
+          txs={Array.isArray(txHistories) ? txHistories : []}
           fiatPrice={fiatPrice}
           wallet={wallet}
           fiatCurrency={

@@ -286,6 +286,7 @@ export const parseTxData = (wallet, tx) => {
     }
     const walletState = getWalletState(wallet);
     const { parsedTxHistory } = walletState;
+    const txHistories = cleanParsedTxHistory(parsedTxHistory)
     var walletAddresses = []
     const pathKeys = Object.keys(wallet.paths)
     for (let i = 0; i < pathKeys.length; i++) {
@@ -295,7 +296,7 @@ export const parseTxData = (wallet, tx) => {
     }
     let isSend = false
     tx.vin.forEach(indata => {
-        parsedTxHistory.forEach(txHistory => {
+        txHistories.forEach(txHistory => {
             //if vin txid is transaction of wallet, is send transaction
             if (indata.txid == txHistory.txid) {
                 //check txHistory with current vin data
@@ -386,4 +387,18 @@ const existWalletAddressInVouts = (out, walletAddresses) => {
         })
     })
     return exist
+}
+
+export const cleanParsedTxHistory = (parsedTxHistory) => {
+    if (!parsedTxHistory || parsedTxHistory.length < 1) {
+        return parsedTxHistory
+    }
+    var result = []
+    parsedTxHistory.forEach(txHistory => {
+        const find = result.find(({txid}) => txid == txHistory.txid)
+        if (!find) {
+            result.push(txHistory)
+        }
+    })
+    return result
 }
