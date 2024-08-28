@@ -131,16 +131,22 @@ export const TokenEntry = styled.div`
     display: flex;
     width: 100%;
 `;
+export const FeeRow = styled.div`
+    display: flex;
+    height: ${props => (props.showPanel ? '20px' : '0px')};
+`;
+export const TxExpandInfo = styled.div`
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+`;
 // Button panel for actions on each tx
 export const Expand = styled.div`
-    display: flex;
     overflow: hidden;
-    height: ${props => (props.showPanel ? '36px' : '0px')};
+    height: ${props => (props.showPanel ? (props.isSent ? '90px' : '60px') : '0px')};
     visibility: ${props => (props.showPanel ? 'visible' : 'collapse')};
     transition: all 0.5s ease-out;
-    justify-content: space-between;
     align-items: center;
-    gap: 12px;
     svg {
         height: 33px;
         width: 33px;

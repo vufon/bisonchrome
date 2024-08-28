@@ -16,6 +16,8 @@ import {
     MainRowLeft,
     Collapse,
     TxDescSendRcvMsg,
+    FeeRow,
+    TxExpandInfo,
 } from './styles';
 import {
     SendIcon,
@@ -176,33 +178,42 @@ const Tx = ({
                         </AmountCol>
                     </MainRow>
                 </Collapse>
-                <Expand showPanel={showPanel}>
-                    <p className="flex-center exchange-text my-1">Exchange Amount:  {xecTxType === 'Sent' ? '-' : ''}
-                        {
-                            supportedFiatCurrencies[
-                                fiatCurrency
-                            ].symbol
-                        }
-                        {(
-                            fiatPrice * toDCR(satoshisSent)
-                        ).toLocaleString(userLocale, {
-                            maximumFractionDigits: 2,
-                            minimumFractionDigits: 2,
-                        })}</p>
+                <Expand showPanel={showPanel} isSent={xecTxType === 'Sent'}>
                     {xecTxType === 'Sent' ? (
                         <>
-                            <p className="flex-center exchange-text my-1">Fee: -
-                                {toDCR(txData.fee).toLocaleString(userLocale, {
-                                    maximumFractionDigits: appConfig.cashDecimals,
-                                    minimumFractionDigits: appConfig.cashDecimals,
-                                })}{' '}
-                                DCR</p>
+                            <div>
+                                <p className="exchange-text my-1">Fee: -
+                                    {toDCR(txData.fee).toLocaleString(userLocale, {
+                                        maximumFractionDigits: appConfig.cashDecimals,
+                                        minimumFractionDigits: appConfig.cashDecimals,
+                                    })}{' '}
+                                    DCR</p>
+                            </div>
                         </>
                     ) : (
                         <></>
                     )}
+                    <TxExpandInfo>
+                        <p className="exchange-text my-1">Exchange Amount:  {xecTxType === 'Sent' ? '-' : ''}
+                            {
+                                supportedFiatCurrencies[
+                                    fiatCurrency
+                                ].symbol
+                            }
+                            {(
+                                fiatPrice * toDCR(satoshisSent)
+                            ).toLocaleString(userLocale, {
+                                maximumFractionDigits: 2,
+                                minimumFractionDigits: 2,
+                            })} (Now)</p>
+                        <p className="exchange-text my-1">Confirmations:  {txData.confirmations}</p>
+                    </TxExpandInfo>
+                    <TxExpandInfo>
+                        <p className="exchange-text my-1">Inputs: {txData.vin.length}</p>
+                        <p className="exchange-text my-1">Outputs: {txData.vout.length}</p>
+                    </TxExpandInfo>
                 </Expand>
-            </TxWrapper>
+            </TxWrapper >
         </>
     );
 };
