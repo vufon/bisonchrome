@@ -74,6 +74,7 @@ export const WalletBalance = styled.div`
     align-items: center;
     justify-content: center;
     word-wrap: break-word;
+    font-size: 18px;
     hyphens: auto;
 `;
 
