@@ -29,7 +29,7 @@ export const getWalletData = async (wallet) => {
 };
 
 //get tx list with multi-address
-export const getAddressesTxHistories = async (addresses) => {
+export const getAddressesTxHistories = async (isSync, addresses, activeWallet, wallets, updateDecredState) => {
     const syncSeparate = []
     let addrArray = []
     const addressObjsMap = new Map()
@@ -51,7 +51,9 @@ export const getAddressesTxHistories = async (addresses) => {
         syncSeparate.push(addrArray)
     }
     const addressesTxsMap = {}
-    for (const addressArray of syncSeparate) {
+    const maxPercent = isSync ? 50 : 90
+    for (let i = 0; i < syncSeparate.length; i++) {
+        const addressArray = syncSeparate[i]
         const tmpMap = await getAddressesTxsRaw(addressArray.join(','))
         if (tmpMap) {
             const addrKeys = Object.keys(tmpMap)
@@ -59,6 +61,16 @@ export const getAddressesTxHistories = async (addresses) => {
                 addressesTxsMap[addrKey] = tmpMap[addrKey]
             })
         }
+        
+        const addPercent = Math.round(maxPercent * (i + 1) / syncSeparate.length)
+        activeWallet.syncPercent += addPercent
+        if (activeWallet.syncPercent > 90) {
+            activeWallet.syncPercent = 90
+        }
+        await updateDecredState('wallets', [
+            activeWallet,
+            ...wallets.slice(1),
+        ]);
     }
     const addrKeys = Object.keys(addressesTxsMap)
     let utxos = []
@@ -68,7 +80,8 @@ export const getAddressesTxHistories = async (addresses) => {
         utxos: utxos,
         balance: 0
     }
-    addrKeys.forEach(addrKey => {
+    for (let keyIndex = 0; keyIndex < addrKeys.length; keyIndex++) {
+        const addrKey = addrKeys[keyIndex]
         const txsAddressObj = addressesTxsMap[addrKey]
         if (txsAddressObj && txsAddressObj.length > 0 && addressObjsMap.has(addrKey)) {
             const inputs = []
@@ -118,7 +131,7 @@ export const getAddressesTxHistories = async (addresses) => {
                 }
             })
         }
-    })
+    }
     resData.utxos = utxos
     let balance = 0
     //calculate balance of address

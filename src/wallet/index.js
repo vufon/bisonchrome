@@ -4,6 +4,7 @@ import { NetWorkType, DerivationPath, NetWorkName, DUMP_ADDRESS } from '../utils
 import * as bip39 from 'bip39';
 import * as Decred from 'decredjs-lib';
 import { isValidMultiSendUserInput } from '../validation';
+import { getAddressesTxHistories } from '../explib';
 
 const SATOSHIS_PER_XEC = 1e8;
 const STRINGIFIED_INTEGER_REGEX = /^[0-9]+$/;
@@ -210,7 +211,7 @@ export const SendToMutilAddress = (wallet, addresses) => {
                     }
                 })
             }
-        })  
+        })
     }
     var resultTx = new Decred.Transaction()
         .from(dcrInputs)
@@ -232,6 +233,71 @@ export const SendToMutilAddress = (wallet, addresses) => {
     return {
         hex: hexSerialize,
         tx: txJson
+    }
+}
+
+export const syncDecredWalletData = async (activeWallet, wallets, updateDecredState) => {
+    //if sync is not complete, sync wallet data
+    if (!activeWallet.syncWallet) {
+        //get addresses list on lib (first 10 account, each account, get 20 addresses)
+        const addressList = []
+        const mnemonics = activeWallet.mnemonic
+        if (!mnemonics) {
+            return
+        }
+        activeWallet.syncPercent = 0
+        await updateDecredState('wallets', [
+            activeWallet,
+            ...wallets.slice(1),
+        ]);
+        const mnemonicObj = Decred.Mnemonic(mnemonics)
+        for (let account = 0; account < 10; account++) {
+            for (let change = 0; change <= 1; change++) {
+                for (let index = 0; index < 200; index++) {
+                    const derivationPath = `m/44'/${DerivationPath()}'/${account}'/${change}/${index}`;
+                    const child = mnemonicObj.toHDPrivateKey(getNetworkName()).derive(derivationPath)
+                    addressList.push({
+                        address: child.publicKey.toAddress().toString(),
+                        privateKey: child.privateKey.toString(),
+                        publicKey: child.publicKey.toString(),
+                        accountIndex: account,
+                        changeIndex: change,
+                        addressIndex: index,
+                        wif: child.privateKey.toWIF(),
+                    })
+                }
+                const changeIndex = account * 2 + change + 1
+                const addPercent = 40 * changeIndex / 20
+                activeWallet.syncPercent = addPercent
+                await updateDecredState('wallets', [
+                    activeWallet,
+                    ...wallets.slice(1),
+                ]);
+            }
+        }
+        const allData = await getAddressesTxHistories(true, addressList, activeWallet, wallets, updateDecredState)
+        const newState = {
+            balanceSats: allData.balance,
+            Utxos: allData.utxos,
+            parsedTxHistory: allData.txList,
+            activeAddresses: allData.activeAddresses
+        }
+        activeWallet.state = newState
+        activeWallet.syncWallet = true
+        activeWallet.syncPercent = 100
+    } else {
+        const activeAddresses = activeWallet.state.activeAddresses
+        if (!activeAddresses || activeAddresses.length < 1) {
+            return
+        }
+        const allData = await getAddressesTxHistories(false, activeAddresses, activeWallet, wallets, updateDecredState)
+        const newState = {
+            balanceSats: allData.balance,
+            Utxos: allData.utxos,
+            parsedTxHistory: allData.txList,
+            activeAddresses: allData.activeAddresses
+        }
+        activeWallet.state = newState
     }
 }
 

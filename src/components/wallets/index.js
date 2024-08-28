@@ -7,6 +7,7 @@ import {
     TrashcanIcon,
     EditIcon,
     AddContactIcon,
+    SyncIcon,
 } from '../common/CustomIcons';
 import PrimaryButton, {
     SecondaryButton,
@@ -28,7 +29,7 @@ import {
 } from './styles';
 import * as bip39 from 'bip39';
 import * as randomBytes from 'randombytes';
-import { createDecredWallet, getWalletsForNewActiveWallet } from '../../wallet/index'
+import { createDecredWallet, getWalletsForNewActiveWallet, syncDecredWalletData } from '../../wallet/index'
 import { WalletContext } from '../../wallet/context';
 import { toast } from 'react-toastify';
 import { toFormattedXec } from '../../utils/formatting';
@@ -227,6 +228,16 @@ const Wallets = () => {
         }));
     };
 
+    const syncWalletData = async wallet => {
+        wallet.syncWallet = false
+        await syncDecredWalletData(wallet, wallets, updateDecredState)
+        wallet.syncPercent = 100
+        updateDecredState('wallets', [
+            wallet,
+            ...wallets.slice(1),
+        ]);
+    }
+
     const addWalletToContacts = async wallet => {
         const addressToAdd = wallet.paths[DerivationPath()].address;
         // Check to see if the contact exists
@@ -360,6 +371,13 @@ const Wallets = () => {
                                         icon={<AddContactIcon />}
                                         onClick={() =>
                                             addWalletToContacts(wallet)
+                                        }
+                                    />
+                                    <IconButton
+                                        name={`Sync ${wallet.name} wallet data`}
+                                        icon={<SyncIcon />}
+                                        onClick={() =>
+                                            syncWalletData(wallet)
                                         }
                                     />
                                 </SvgButtonPanel>

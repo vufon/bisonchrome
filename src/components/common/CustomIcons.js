@@ -28,6 +28,7 @@ import { ReactComponent as Dollar } from '../../static/icons/dollar.svg';
 import { ReactComponent as Facebook } from '../../static/icons/Facebook_Logo.svg';
 import { ReactComponent as Github } from '../../static/icons/github.svg';
 import { ReactComponent as Mined } from '../../static/icons/pickaxe.svg';
+import { ReactComponent as Sync } from '../../static/icons/sync.svg';
 import { ReactComponent as LinkSolid } from '../../static/icons/external-link-square-alt.svg';
 
 const Rotate = styled.div`
@@ -137,10 +138,20 @@ const EditWrapper = styled.div`
     fill: ${props => props.theme.eCashBlue};
     cursor: pointer;
 `;
+const SyncWrapper = styled.div`
+    stroke: ${props => props.theme.eCashBlue};
+    fill: ${props => props.theme.eCashBlue};
+    cursor: pointer;
+`;
 export const EditIcon = () => (
     <EditWrapper>
         <Edit title="edit" />
     </EditWrapper>
+);
+export const SyncIcon = () => (
+    <SyncWrapper>
+        <Sync title="sync" />
+    </SyncWrapper>
 );
 export const NavWrapper = styled.div`
     width: 100%;
