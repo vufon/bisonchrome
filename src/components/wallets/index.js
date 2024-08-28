@@ -352,7 +352,7 @@ const Wallets = () => {
                                 <ActiveWalletName className="notranslate">
                                     {wallet.name}
                                 </ActiveWalletName>
-                                <h4>(active)</h4>
+                                <h4 className='fs-18'>(active)</h4>
                                 <SvgButtonPanel>
                                     <CopyIconButton
                                         name={`Copy address of ${wallet.name}`}
@@ -386,7 +386,7 @@ const Wallets = () => {
                             <Wallet key={`${wallet.name}_${index}`}>
                                 <WalletRow>
                                     <WalletName>
-                                        <h3 className="overflow notranslate">
+                                        <h3 className="overflow notranslate fs-19">
                                             {wallet.name}
                                         </h3>
                                     </WalletName>

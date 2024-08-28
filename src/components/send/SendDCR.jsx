@@ -14,7 +14,7 @@ import {
 import Modal from '../common/Modal';
 import { isValidMultiSendUserInput, isValidXecSendAmount, parseAddressInput, shouldSendXecBeDisabled } from '../../validation';
 import { WalletContext } from '../../wallet/context';
-import { EstimateFee, fiatToSatoshis, getMaxSendAmountSatoshis, getMultisendTargetOutputs, getWalletState, SendAmount, SendToMutilAddress, sumOneToManyDcr, toDCR, toSatoshis } from '../../wallet';
+import { EstimateFee, fiatToSatoshis, getMaxSendAmountSatoshis, getMultisendTargetOutputs, getWalletState, SendAmount, SendToMutilAddress, sumOneToManyDcr, syncDecredWalletData, toDCR, toSatoshis } from '../../wallet';
 import { supportedFiatCurrencies } from '../../config/cashtabSettings';
 import { broadcastTx, getExplorerURL } from '../../explib';
 import { toast } from 'react-toastify';
@@ -145,6 +145,7 @@ const SendDCR = ({ addressInput = '' }) => {
     fiatPrice,
     apiError,
     decredState,
+    updateDecredState,
   } = ContextValue;
 
   const { settings, wallets } = decredState;
@@ -439,6 +440,12 @@ const SendDCR = ({ addressInput = '' }) => {
           },
         );
         clearInputForms();
+        await syncDecredWalletData(wallet, wallets, updateDecredState)
+        wallet.syncPercent = 100
+        updateDecredState('wallets', [
+          wallet,
+          ...wallets.slice(1),
+        ]);
       }
     } catch (err) {
       toast.error(err)

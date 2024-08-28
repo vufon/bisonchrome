@@ -67,12 +67,16 @@ export const Alert = styled.div`
     border-radius: 12px;
     color: red;
     padding: 12px;
+    font-size: 17px;
+    text-align: center;
 `;
 export const Info = styled.div`
     background-color: #fff2f0;
     border-radius: 12px;
     color: ${props => props.theme.eCashBlue};
     padding: 12px;
+    font-size: 17px;
+    text-align: center;
 `;
 export const BlockNotification = styled.div`
     display: flex;

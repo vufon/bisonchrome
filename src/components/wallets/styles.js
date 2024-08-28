@@ -49,10 +49,12 @@ export const WalletName = styled.div`
     display: flex;
     text-align: left;
     word-break: break-word;
+    font-size: 19px;
 `;
 
 export const ActiveWalletName = styled(WalletName)`
     font-weight: bold;
+    font-size: 19px;
     color: ${props => props.theme.eCashBlue};
 `;
 
@@ -81,6 +83,7 @@ export const ActivateButton = styled.button`
     border-radius: 9px;
     border: 2px solid ${props => props.theme.eCashBlue};
     background: transparent;
+    font-size: 19px;
     :hover {
         background-color: ${props => props.theme.eCashBlue};
         color: ${props => props.theme.contrast};

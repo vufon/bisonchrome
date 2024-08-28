@@ -78,8 +78,13 @@ const Configure = () => {
     const ContextValue = React.useContext(WalletContext);
     const { updateDecredState, decredState } = ContextValue;
     const { settings, wallets } = decredState;
-
     const wallet = wallets.length > 0 ? wallets[0] : false;
+    const handleSendModalToggle = e => {
+        updateDecredState('settings', {
+            ...settings,
+            sendModal: e.target.checked,
+        });
+    };
     return (
         <StyledConfigure title="Settings">
             <HeadlineAndIcon>
@@ -109,7 +114,8 @@ const Configure = () => {
                 <GeneralSettingsItem>
                     <Switch
                         name="Toggle Send Confirmations"
-                        checked={false}
+                        checked={settings.sendModal}
+                        handleToggle={handleSendModalToggle}
                     />
                     <SettingsLabel>Send Confirmations</SettingsLabel>
                 </GeneralSettingsItem>

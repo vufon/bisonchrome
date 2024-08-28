@@ -16,7 +16,7 @@ const BackupFlex = styled.div`
     display: flex;
     flex-direction: column;
     align-items: center;
-    row-gap: 48px;
+    row-gap: 30px;
     color: ${props => props.theme.contrast};
     justify-content: flex-start;
 `;
@@ -33,7 +33,8 @@ const SwitchRow = styled.div`
     width: 100%;
     gap: 12px;
 `;
-const SwitchLabel = styled.div``;
+const SwitchLabel = styled.div`
+    font-size: 17px;`;
 
 const BackupWallet = () => {
     const [showSeed, setShowSeed] = useState(false);
