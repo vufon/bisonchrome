@@ -198,11 +198,25 @@ export const SendToMutilAddress = (wallet, addresses) => {
     addresses.forEach(addrData => {
         totalAmount += addrData.atoms
     })
+    const privateKeys = []
+    if (dcrInputs && dcrInputs.length > 0) {
+        dcrInputs.forEach(input => {
+            const activeAddresses = wallet.state.activeAddresses
+            if (activeAddresses && activeAddresses.length > 0) {
+                activeAddresses.forEach(activeAddr => {
+                    if (activeAddr.address == input.address) {
+                        privateKeys.push(activeAddr.privateKey)
+                        return
+                    }
+                })
+            }
+        })  
+    }
     var resultTx = new Decred.Transaction()
         .from(dcrInputs)
         .to(addresses)
         .change(changeAddress.toString())
-        .sign(privateKey)
+        .sign(privateKeys)
     var fee = resultTx.getFee()
     const totalSatsInWallet = dcrInputs.reduce(
         (previousBalance, utxo) => previousBalance + utxo.atoms,
