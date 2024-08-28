@@ -126,6 +126,9 @@ export const getAddressesTxHistories = async (addresses) => {
         balance += utxo.atoms
     })
     resData.balance = balance
+    if (resData.txList && resData.txList.length > 1) {
+        resData.txList.sort((a, b) => (a.time > b.time) ? -1 : ((a.time < b.time) ? 1 : 0))
+    }
     return resData
 }
 

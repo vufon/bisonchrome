@@ -300,11 +300,18 @@ export const parseTxData = (wallet, tx) => {
     const { parsedTxHistory } = walletState;
     const txHistories = cleanParsedTxHistory(parsedTxHistory)
     var walletAddresses = []
-    const pathKeys = Object.keys(wallet.paths)
-    for (let i = 0; i < pathKeys.length; i++) {
-        const path = pathKeys[i]
-        const pathInfo = wallet.paths[path]
-        walletAddresses.push(pathInfo.address)
+    //active address
+    if (wallet.state.activeAddresses && wallet.state.activeAddresses.length > 0) {
+        wallet.state.activeAddresses.forEach(activeAddress => {
+            walletAddresses.push(activeAddress.address)
+        })
+    } else {
+        const pathKeys = Object.keys(wallet.paths)
+        for (let i = 0; i < pathKeys.length; i++) {
+            const path = pathKeys[i]
+            const pathInfo = wallet.paths[path]
+            walletAddresses.push(pathInfo.address)
+        }
     }
     let isSend = false
     tx.vin.forEach(indata => {
