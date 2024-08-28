@@ -47,13 +47,14 @@ export const toDCR = satoshis => {
     return new BN(satoshis).div(SATOSHIS_PER_XEC).toNumber();
 };
 
-export const createDecredWallet = async (mnemonicWords) => {
+export const createDecredWallet = async (mnemonicWords, isImport) => {
     // Initialize wallet with empty state
     const wallet = {
         state: {
             balanceSats: 0,
             Utxos: [],
             parsedTxHistory: [],
+            activeAddresses: [],
         },
     };
     var mnemonicObj
@@ -81,10 +82,21 @@ export const createDecredWallet = async (mnemonicWords) => {
         publicKey: child.publicKey.toString(),
         wif: child.privateKey.toWIF(),
     }
+    const addressObj = {
+        address: child.publicKey.toAddress().toString(),
+        privateKey: child.privateKey.toString(),
+        publicKey: child.publicKey.toString(),
+        accountIndex: 0,
+        changeIndex: 0,
+        addressIndex: 0,
+        wif: child.privateKey.toWIF(),
+    }
     wallet.name = pathInfo.address.slice(0, 6);
+    wallet.state.activeAddresses.push(addressObj)
     const pathMap = {};
     pathMap[DerivationPath()] = pathInfo
     wallet.paths = pathMap;
+    wallet.syncWallet = isImport ? false : true
     return wallet;
 }
 
@@ -395,7 +407,7 @@ export const cleanParsedTxHistory = (parsedTxHistory) => {
     }
     var result = []
     parsedTxHistory.forEach(txHistory => {
-        const find = result.find(({txid}) => txid == txHistory.txid)
+        const find = result.find(({ txid }) => txid == txHistory.txid)
         if (!find) {
             result.push(txHistory)
         }

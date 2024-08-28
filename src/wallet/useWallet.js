@@ -21,9 +21,11 @@ import {
 } from '../utils/helpers';
 import { toast } from 'react-toastify';
 import DecredState from '../config/DecredState';
+import * as Decred from 'decredjs-lib';
 import { getUserLocale } from '../utils/helpers';
 import { DerivationPath } from '../utils/const';
-import { getAddressTxCountRaw, getWalletData } from '../explib';
+import { getAddressesTxHistories, getAddressTxCountRaw, getPathedTxAndTxHistoryPromise, getWalletData } from '../explib';
+import { getNetworkName } from '.';
 
 const useWallet = () => {
     const [cashtabLoaded, setCashtabLoaded] = useState(false);
@@ -63,18 +65,76 @@ const useWallet = () => {
         }
         // Get the active wallet
         const activeWallet = decredState.wallets[0];
-        const walletData = await getWalletData(activeWallet)
-        const newState = {
-            balanceSats: walletData.balance,
-            Utxos: walletData.utxos,
-            parsedTxHistory: walletData.txList,
+        const walletData = {
+            txList: [],
+            utxos: [],
+            balance: 0
+        };
+        //if sync is not complete, sync wallet data
+        if (!activeWallet.syncWallet) {
+            //get addresses list on lib (first 10 account, each account, get 20 addresses)
+            const addressList = []
+            const mnemonics = activeWallet.mnemonic
+            if (!mnemonics) {
+                return
+            }
+            activeWallet.syncPercent = 0
+            const mnemonicObj = Decred.Mnemonic(mnemonics)
+            for (let account = 0; account < 10; account++) {
+                for (let change = 0; change <= 1; change++) {
+                    for (let index = 0; index < 100; index++) {
+                        const derivationPath = `m/44'/${DerivationPath()}'/${account}'/${change}/${index}`;
+                        const child = mnemonicObj.toHDPrivateKey(getNetworkName()).derive(derivationPath)
+                        addressList.push({
+                            address: child.publicKey.toAddress().toString(),
+                            privateKey: child.privateKey.toString(),
+                            publicKey: child.publicKey.toString(),
+                            accountIndex: account,
+                            changeIndex: change,
+                            addressIndex: index,
+                            wif: child.privateKey.toWIF(),
+                        })
+                        const indexOfItem = account * 20 + index
+                        if (indexOfItem % 5 == 0) {
+                            activeWallet.syncPercent = Math.round(100 * indexOfItem / 200)
+                            updateDecredState('wallets', [
+                                activeWallet,
+                                ...decredState.wallets.slice(1),
+                            ]);
+                        }
+                    }
+                }
+            }
+            const allData = await getAddressesTxHistories(addressList)
+            const newState = {
+                balanceSats: allData.balance,
+                Utxos: allData.utxos,
+                parsedTxHistory: allData.txList,
+                activeAddresses: allData.activeAddresses
+            }
+            activeWallet.state = newState
+            activeWallet.syncWallet = true
+            activeWallet.syncPercent = 100
+        } else {
+            const activeAddresses = activeWallet.state.activeAddresses
+            if (!activeAddresses || activeAddresses.length < 1) {
+                return
+            }
+            const allData = await getAddressesTxHistories(activeAddresses)
+            const newState = {
+                balanceSats: allData.balance,
+                Utxos: allData.utxos,
+                parsedTxHistory: allData.txList,
+                activeAddresses: allData.activeAddresses
+            }
+            activeWallet.state = newState
         }
-        activeWallet.state = newState
         updateDecredState('wallets', [
             activeWallet,
             ...decredState.wallets.slice(1),
         ]);
         setApiError(false)
+        return
     };
 
     /**

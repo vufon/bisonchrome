@@ -27,7 +27,7 @@ const OnBoarding = () => {
         // Event("Category", "Action", "Label")
         // Track number of created wallets from onboarding
         //Event('Onboarding.js', 'Create Wallet', 'Imported');
-        const importedWallet = await createDecredWallet(importedMnemonic);
+        const importedWallet = await createDecredWallet(importedMnemonic, true);
         updateDecredState('wallets', [...wallets, importedWallet]);
         // Close the modal
         setShowImportWalletModal(false);
@@ -37,7 +37,7 @@ const OnBoarding = () => {
         // Event("Category", "Action", "Label")
         // Track number of created wallets from onboarding
         //Event('Onboarding.js', 'Create Wallet', 'New');
-        const newWallet = await createDecredWallet(generateMnemonic());
+        const newWallet = await createDecredWallet(generateMnemonic(), false);
         updateDecredState('wallets', [...wallets, newWallet]);
     }
 

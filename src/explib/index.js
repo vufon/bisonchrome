@@ -1,11 +1,13 @@
 import appConfig from "../config/app";
 import { httpGet } from "../http";
-import { NetWorkName } from "../utils/const";
+import { NetWorkName, NetWorkType } from "../utils/const";
 
-export const TESTNET_EXPLORER_API = 'http://173.214.168.198:17777/api'
-export const MAINET_EXPLORER_API = 'https://dcrdata.decred.org/api'
-export const TESTNET_EXPLORER_URL = 'http://173.214.168.198:17777'
-export const MAINET_EXPLORER_URL = 'https://blockcare.pro'
+export const TESTNET_EXPLORER_API = 'https://testnet.blockcare.pro/api'
+export const MAINET_EXPLORER_API = 'https://blockcare.pro/api'
+export const TESTNET_BROADCAST_API = 'https://testnet.blockcare.pro/api'
+export const MAINET_BROADCAST_API = 'https://blockcare.pro/api'
+export const TESTNET_EXPLORER_URL = 'https://testnet.dcrdata.org'
+export const MAINET_EXPLORER_URL = 'https://dcrdata.decred.org'
 
 export const getWalletData = async (wallet) => {
     const walletData = {
@@ -13,11 +15,12 @@ export const getWalletData = async (wallet) => {
         utxos: [],
         balance: 0
     };
+    //if wallet
     const pathKeys = Object.keys(wallet.paths)
     for (let i = 0; i < pathKeys.length; i++) {
         const path = pathKeys[i]
         const pathInfo = wallet.paths[path]
-        const pathData = await getPathedTxAndTxHistoryPromise(pathInfo.address, path)
+        const pathData = await getPathedTxAndTxHistoryPromise(pathInfo.address)
         walletData.txList.push(...pathData.txList)
         walletData.utxos.push(...pathData.utxos)
         walletData.balance += pathData.balance
@@ -25,7 +28,124 @@ export const getWalletData = async (wallet) => {
     return walletData;
 };
 
-export const getPathedTxAndTxHistoryPromise = async (address, path) => {
+//get tx list with multi-address
+export const getAddressesTxHistories = async (addresses) => {
+    const syncSeparate = []
+    let addrArray = []
+    const addressObjsMap = new Map()
+    const eachSyncAddr = 200
+    let count = 0
+    //get address list string
+    addresses.forEach(addr => {
+        if (count == eachSyncAddr) {
+            syncSeparate.push(addrArray)
+            count = 0
+            addrArray = []
+        } else {
+            addrArray.push(addr.address)
+            count++
+        }
+        addressObjsMap.set(addr.address, addr)
+    })
+    if (count > 0) {
+        syncSeparate.push(addrArray)
+    }
+    const addressesTxsMap = {}
+    for (const addressArray of syncSeparate) {
+        const tmpMap = await getAddressesTxsRaw(addressArray.join(','))
+        if (tmpMap) {
+            const addrKeys = Object.keys(tmpMap)
+            addrKeys.forEach(addrKey => {
+                addressesTxsMap[addrKey] = tmpMap[addrKey]
+            })
+        }
+    }
+    const addrKeys = Object.keys(addressesTxsMap)
+    let utxos = []
+    const resData = {
+        activeAddresses: [],
+        txList: [],
+        utxos: utxos,
+        balance: 0
+    }
+    addrKeys.forEach(addrKey => {
+        const txsAddressObj = addressesTxsMap[addrKey]
+        if (txsAddressObj && txsAddressObj.length > 0 && addressObjsMap.has(addrKey)) {
+            const inputs = []
+            const outputTxs = []
+            pushTxToList(txsAddressObj, resData.txList)
+            resData.activeAddresses.push(addressObjsMap.get(addrKey))
+            //define utxos, stxos
+            txsAddressObj.forEach(txs => {
+                const txid = txs.txid
+                const confirmations = txs.confirmations
+                if (txs.vout) {
+                    txs.vout.forEach(out => {
+                        const scriptPubkey = out.scriptPubKey
+                        if (scriptPubkey && scriptPubkey.addresses) {
+                            scriptPubkey.addresses.forEach(addr => {
+                                //if is input tx
+                                if (addr == addrKey) {
+                                    //insert to inputs array
+                                    const inputData = {
+                                        address: addrKey,
+                                        txId: txid,
+                                        outputIndex: out.n,
+                                        script: scriptPubkey.hex,
+                                        total: out.value,
+                                        atoms: Math.round(out.value * 1e8),
+                                        confirmations: confirmations
+                                    }
+                                    inputs.push(inputData)
+                                }
+                            })
+                        }
+                    })
+                }
+                if (txs.vin) {
+                    txs.vin.forEach(vinElement => {
+                        outputTxs.push({
+                            txid: vinElement.txid,
+                            vout: vinElement.vout
+                        })
+                    })
+                }
+            })
+            //handler utxos array
+            inputs.forEach(input => {
+                if (!checkIsOutputOfOtherTx(input, outputTxs)) {
+                    utxos.push(input)
+                }
+            })
+        }
+    })
+    resData.utxos = utxos
+    let balance = 0
+    //calculate balance of address
+    utxos.forEach(utxo => {
+        balance += utxo.atoms
+    })
+    resData.balance = balance
+    return resData
+}
+
+export const pushTxToList = async (txList, targets) => {
+    txList.forEach(tx => {
+        let exist = false
+        targets.forEach(targetTx => {
+            if (targetTx.txid == tx.txid) {
+                exist = true
+                return
+            }
+        })
+        if (!exist) {
+            targets.push(tx)
+        }
+    })
+}
+
+
+export const getPathedTxAndTxHistoryPromise = async (address) => {
     const addressTxs = await getAddressTxsRaw(address)
     let utxos = []
     const resData = {
@@ -53,7 +173,6 @@ export const getPathedTxAndTxHistoryPromise = async (address, path) => {
                             //insert to inputs array
                             const inputData = {
                                 address: address,
-                                path: path,
                                 txId: txid,
                                 outputIndex: out.n,
                                 script: scriptPubkey.hex,
@@ -110,6 +229,14 @@ export const getAddressTxsRaw = async (address) => {
     return responseData.data
 }
 
+export const getAddressesTxsRaw = async (addresses) => {
+    const responseData = await httpGet(getAPIURL() + '/address/addressesTxs/' + addresses)
+    if (responseData.error) {
+        return null
+    }
+    return responseData.data
+}
+
 export const getAddressBalance = (address) => {
     const resData = httpGet(getAPIURL() + '/address/' + address + '/totals')
     const balance = resData.dcr_unspent ? resData.dcr_unspent : 0
@@ -117,15 +244,19 @@ export const getAddressBalance = (address) => {
 }
 
 export const getAPIURL = () => {
-    return appConfig.network == NetWorkName.MainnetName ? MAINET_EXPLORER_API : TESTNET_EXPLORER_API
+    return appConfig.network == NetWorkType.Mainnet ? MAINET_EXPLORER_API : TESTNET_EXPLORER_API
+}
+
+export const getBroadcastAPIURL = () => {
+    return appConfig.network == NetWorkType.Mainnet ? MAINET_BROADCAST_API : TESTNET_BROADCAST_API
 }
 
 export const getExplorerURL = () => {
-    return appConfig.network == NetWorkName.MainnetName ? MAINET_EXPLORER_URL : TESTNET_EXPLORER_URL
+    return appConfig.network == NetWorkType.Mainnet ? MAINET_EXPLORER_URL : TESTNET_EXPLORER_URL
 }
 
 export const broadcastTx = async (txHex, depth) => {
-    const resData = await httpGet(getAPIURL() + '/broadcast?hex=' + txHex)
+    const resData = await httpGet(getBroadcastAPIURL() + '/broadcast?hex=' + txHex)
     if (resData.error && depth == 5) {
         throw new Error('Broadcast transaction failed')
     }
