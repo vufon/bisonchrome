@@ -70,7 +70,7 @@ const Wallets = () => {
     const userLocale = getUserLocale(navigator);
     async function createWallet() {
         //const wallet = CoinKey.createRandom(CoinInfo("dcr").versions);
-        const newWallet = await createDecredWallet(generateMnemonic())
+        const newWallet = await createDecredWallet(generateMnemonic(), false)
         const walletAlreadyInWalletsSomehow = wallets.find(
             wallet =>
                 wallet.name === newWallet.name ||
@@ -140,7 +140,7 @@ const Wallets = () => {
         }
 
         // Create a new wallet from mnemonic
-        const newImportedWallet = await createDecredWallet(formData.mnemonic);
+        const newImportedWallet = await createDecredWallet(formData.mnemonic, true);
 
         // Handle edge case of another wallet having the same name
         const existingWalletHasSameName = wallets.find(

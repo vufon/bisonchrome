@@ -9,7 +9,7 @@ const appConfig = {
     derivationPath: 42,
     testDerivationPath: 1,
     seedwords: 33, //17 or 33
-    network: 'testnet',
+    network: 'mainnet',
     logo: mainLogo,
     legacyPrefix: 'decred',
     exchangeId: 'decred',

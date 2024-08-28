@@ -8,10 +8,12 @@
     --transitionDurationSlow: 150ms;
     --transitionDurationFast: 50ms;
 }
+
 #root {
     display: flex;
     justify-content: center;
 }
+
 .app {
     width: 500px;
     min-height: calc(-80px + 100vh);
@@ -22,46 +24,63 @@
     padding-bottom: 80px;
     font-family: "Inter", sans-serif;
 }
+
 /* Utility classes */
 a {
     color: var(--primaryAccent);
     cursor: pointer;
     transition-duration: var(--transitionDurationFast);
 }
+
 a:hover {
     color: var(--secondaryAccent);
     transition-duration: var(--transitionDurationSlow);
 }
-h1, h2, h3, h4, span, label, p {
+
+h1,
+h2,
+h3,
+h4,
+span,
+label,
+p {
     color: white;
 }
+
 h1 {
     margin: 0;
 }
+
 h1.title {
     color: var(--secondaryAccent);
     margin: 0 0 0 7px;
 }
+
 h3.cardTitle {
     margin: 0 0 7px 0;
     font-weight: 900;
     letter-spacing: 0.025em;
 }
+
 p.exchange-text {
     color: rgb(188, 188, 188);
 }
+
 p {
     font-size: 14px;
 }
+
 .container {
     height: 100%;
     display: flex;
     flex-direction: column;
 }
+
 .flex-center {
     display: flex;
     justify-content: center;
 }
+
 button {
     background-color: var(--primaryColor);
     color: var(--secondaryAccent);
@@ -73,26 +92,31 @@ button {
     border-radius: 4px;
     transition-duration: var(--transitionDurationFast);
 }
+
 button:hover {
     background-color: var(--secondaryAccent);
     color: var(--primaryColor);
     transition-duration: var(--transitionDurationSlow);
 }
+
 button.square {
     height: 25px;
     width: 25px;
     font-weight: 900;
 }
+
 div.buttonGroup {
     display: flex;
     justify-content: center;
 }
+
 svg.svg {
     fill: var(--secondaryAccent);
     height: 1em;
     width: 1em;
     margin-left: -6px;
 }
+
 .card {
     background-color: var(--secondaryColor);
     padding: 10px;
@@ -100,12 +124,15 @@ svg.svg {
     border-radius: 5px;
     box-shadow: 3px 3px 4px #00212b;
 }
+
 input {
     color: black;
 }
+
 .card-padding-increase {
-    background: #37668b  !important;
+    background: #37668b !important;
 }
+
 /* END Utility classes */
 
 /* Timer */
@@ -115,50 +142,61 @@ div.elapsedTime {
     align-items: center;
     padding: 0 40px 20px 40px;
 }
-div.elapsedTime > h2 {
+
+div.elapsedTime>h2 {
     margin: 2px auto;
 }
+
 /* END Timer */
 
 /* Quick tabs */
 p.info {
-   margin: 1em;
+    margin: 1em;
 }
+
 /* End Quick tabs */
 
 /* URL FORMS - START */
-div.urlForms > h3 {
+div.urlForms>h3 {
     display: flex;
     justify-content: center;
 }
+
 div.urlForm {
     display: flex;
 }
-div.urlForm > input {
+
+div.urlForm>input {
     margin: 5px 0 0 0;
     width: 200px;
     border: none;
     border-radius: 5px;
     padding: 4px;
 }
+
 .textInput {
     margin: 0 1em;
 }
+
 .checkboxLabel {
     margin: 5px 1em;
     width: 300px;
 }
-div.urlForm > input.checkboxInput {
+
+div.urlForm>input.checkboxInput {
     margin: 9px 0 0 0;
     accent-color: var(--primaryColor);
 }
-div.urlForm > input:focus {
+
+div.urlForm>input:focus {
     outline-color: var(--primaryColor);
 }
+
 div.saveUrlsContainer {
     display: flex;
     justify-content: center;
 }
+
 button.saveUrls {
     display: flex;
     justify-content: center;
@@ -166,32 +204,41 @@ button.saveUrls {
     background-color: var(--secondaryAccent);
     color: var(--secondaryColor);
 }
+
 button.saveUrls:hover {
     background-color: var(--secondaryColor);
     color: var(--secondaryAccent);
 }
+
 h3.linkGroupTitle {
     margin: 0;
 }
+
 label.urlLabel {
     margin: 0 1em;
 }
+
 .main-logo {
     width: 180px;
 }
+
 .top-banner {
     height: 40px;
 }
+
 .cursor-pointer {
     cursor: pointer;
 }
+
 .account-dropdown {
     border: none !important;
     box-shadow: none;
 }
+
 .backup-card {
     background-color: rgb(255, 242, 240) !important;
 }
+
 .d-nonei {
     display: none !important;
 }
@@ -214,4 +261,18 @@ code {
 
 .white-text {
     color: white !important;
+}
+
+#progressbar {
+    background-color: black;
+    border-radius: 13px;
+    /* (height of inner div) / 2 + padding */
+    padding: 3px;
+}
+
+#progressbar>div {
+    background-color: orange;
+    /* Adjust with JavaScript */
+    height: 20px;
+    border-radius: 10px;
 }

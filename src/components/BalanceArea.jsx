@@ -19,8 +19,9 @@ export default function BalanceArea({
   userLocale = 'en-US',
 }) {
   userLocale = typeof userLocale === 'undefined' ? 'en-US' : userLocale;
-  const balanceSats = wallets[0].state.balanceSats
-  const address = wallets[0].paths[DerivationPath()].address;
+  const wallet = wallets[0]
+  const balanceSats = wallet.state.balanceSats
+  const address = wallet.paths[DerivationPath()].address;
   const renderBalanceHeader = Number.isInteger(balanceSats);
   const renderFiatValues = typeof fiatPrice === 'number';
   let balanceDCR,
@@ -101,12 +102,18 @@ export default function BalanceArea({
           toast.success(`"${address}" copied to clipboard`);
         }} />
       </div>
-      <h3 className="flex-center cardTitle mt-3"> {formattedBalanceDCR} {appConfig.ticker}</h3>
-      <p className="flex-center my-1">{supportedFiatCurrencies[settings.fiatCurrency].symbol}{formattedBalanceFiat}&nbsp;
-        {supportedFiatCurrencies[
-          settings.fiatCurrency
-        ].slug.toUpperCase()}</p>
-      <p className="flex-center exchange-text my-1">1 {appConfig.ticker} = {formattedExchangeRate}{' '}{settings.fiatCurrency.toUpperCase()}</p>
+      {wallet.syncWallet ? (<>
+        <h3 className="flex-center cardTitle mt-3"> {formattedBalanceDCR} {appConfig.ticker}</h3>
+        <p className="flex-center my-1">{supportedFiatCurrencies[settings.fiatCurrency].symbol}{formattedBalanceFiat}&nbsp;
+          {supportedFiatCurrencies[
+            settings.fiatCurrency
+          ].slug.toUpperCase()}</p>
+        <p className="flex-center exchange-text my-1">1 {appConfig.ticker} = {formattedExchangeRate}{' '}{settings.fiatCurrency.toUpperCase()}</p>
+      </>) : (<>
+        <div id="progressbar">
+          <div id="currentProgress" style={{width: (wallet.syncPercent ? wallet.syncPercent : 0) + 'px'}}></div>
+        </div>
+      </>)}
     </div>
   )
 }
