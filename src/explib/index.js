@@ -61,7 +61,7 @@ export const getAddressesTxHistories = async (isSync, addresses, activeWallet, w
                 addressesTxsMap[addrKey] = tmpMap[addrKey]
             })
         }
-        
+
         const addPercent = Math.round(maxPercent * (i + 1) / syncSeparate.length)
         activeWallet.syncPercent += addPercent
         if (activeWallet.syncPercent > 90) {
@@ -148,14 +148,23 @@ export const getAddressesTxHistories = async (isSync, addresses, activeWallet, w
 export const pushTxToList = async (txList, targets) => {
     txList.forEach(tx => {
         let exist = false
-        targets.forEach(targetTx => {
+        let replace = false
+        let replaceIndex = -1
+        for (let i = 0; i < targets.length; i++) {
+            const targetTx = targets[i]
             if (targetTx.txid == tx.txid) {
                 exist = true
-                return
+                if (tx.time > 0) {
+                    replace = true
+                    replaceIndex = i
+                }
+                break
             }
-        })
+        }
         if (!exist) {
             targets.push(tx)
+        } else if (replace && replaceIndex >= 0) {
+            targets[replaceIndex] = tx
         }
     })
 }

@@ -194,8 +194,7 @@ function App() {
         <NavButton
           aria-label="Home Screen"
           active={
-            location.pathname === '/' ||
-            location.pathname === '/wallet'
+            page === 'home'
           }
           onClick={() => setPage('home')}
         >
@@ -204,7 +203,7 @@ function App() {
 
         <NavButton
           aria-label="Send Screen"
-          active={location.pathname === '/send'}
+          active={page === 'send'}
           style={{ paddingBottom: '10px' }}
           onClick={() => setPage('send')}
         >
@@ -212,14 +211,14 @@ function App() {
         </NavButton>
         <NavButton
           aria-label="Receive Screen"
-          active={location.pathname === '/receive'}
+          active={page === 'receive'}
           onClick={() => setPage('receive')}
         >
           <ReceiveIcon />
         </NavButton>
         <NavButton
           aria-label="Wallets"
-          active={location.pathname === '/wallets'}
+          active={page === 'wallets'}
           onClick={() => setPage('wallets')}
         >
           <BankIcon />
@@ -234,28 +233,28 @@ function App() {
             open={navMenuClicked}
           >
             <NavItem
-              active={location.pathname === '/backup'}
+              active={page === 'backup'}
               onClick={() => setPage('backup')}
             >
               {' '}
-              <p>Wallet Backup</p>
+              <p className={page === 'backup' ? 'nav-active' : ''}>Wallet Backup</p>
               <WalletIcon />
             </NavItem>
             <NavItem
-              active={location.pathname === '/contacts'}
+              active={page === 'contacts'}
               onClick={() => setPage('contacts')}
             >
               {' '}
-              <p>Contacts</p>
+              <p className={page === 'contacts' ? 'nav-active' : ''}>Contacts</p>
               <ContactsIcon />
             </NavItem>
             <NavItem
               active={
-                location.pathname === '/configure'
+                page === 'configure'
               }
               onClick={() => setPage('configure')}
             >
-              <p>Settings</p>
+              <p className={page === 'configure' ? 'nav-active' : ''}>Settings</p>
               <SettingsIcon />
             </NavItem>
           </NavMenu>
