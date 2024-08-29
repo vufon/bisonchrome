@@ -111,7 +111,7 @@ const AliasSuffixHolder = styled(OnMaxBtn)`
     cursor: auto;
 `;
 
-const CurrencyDropdown = styled.select`
+export const CurrencyDropdown = styled.select`
     cursor: ${props => (props.disabled ? 'not-allowed' : 'pointer')};
     font-size: 18px;
     padding: 6px;
@@ -126,7 +126,7 @@ const CurrencyDropdown = styled.select`
 const SendXecDropdown = styled(CurrencyDropdown)`
     width: 100px;
 `;
-const CurrencyOption = styled.option`
+export const CurrencyOption = styled.option`
     text-align: left;
     background-color: ${props => props.theme.forms.selectionBackground};
     :hover {

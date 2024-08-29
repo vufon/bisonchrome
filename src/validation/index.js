@@ -58,18 +58,20 @@ export const isValidAliasSendInput = sendToAliasInput => {
 
 export const validateMnemonic = (
     mnemonic,
+    seedType,
     wordlist = Decred.Mnemonic.Words.ENGLISH,
 ) => {
     try {
         if (!mnemonic || !wordlist) return false;
-         
         // Preprocess the words
-        const words = mnemonic.split(' ');
+        const words = mnemonic.trim().split(' ');
         // Detect blank phrase
-        if (words.length === 0) return false;
-
-        // Check the words are valid
-        return Decred.Mnemonic.isValid(mnemonic, wordlist)
+        if (words.length === 0 || words.length != seedType) return false;
+        if (seedType == 17 || seedType == 33) {
+            // Check the words are valid
+            return Decred.Mnemonic.isValid(mnemonic, wordlist)
+        }
+        return true
     } catch (err) {
         console.error(err);
         return false;
@@ -553,9 +555,8 @@ export const isValidMultiSendUserInput = (
         const elementsThisLine = addressAndValueThisLine.length;
 
         if (elementsThisLine < 2) {
-            return `Line ${
-                i + 1
-            } must have address and value, separated by a comma`;
+            return `Line ${i + 1
+                } must have address and value, separated by a comma`;
         } else if (elementsThisLine > 2) {
             return `Line ${i + 1}: Comma can only separate address and value.`;
         }
@@ -571,9 +572,8 @@ export const isValidMultiSendUserInput = (
 
         if (isValidValue !== true) {
             // isValidXecSendAmount returns a string explaining the error if it does not return true
-            return `${isValidValue}: check value "${xecSendAmount}" at line ${
-                i + 1
-            }`;
+            return `${isValidValue}: check value "${xecSendAmount}" at line ${i + 1
+                }`;
         }
         // If it is valid, then we know it has appropriate decimal places
         totalSendSatoshis += toSatoshis(Number(xecSendAmount));

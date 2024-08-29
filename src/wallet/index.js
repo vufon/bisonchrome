@@ -5,6 +5,7 @@ import * as bip39 from 'bip39';
 import * as Decred from 'decredjs-lib';
 import { isValidMultiSendUserInput } from '../validation';
 import { getAddressesTxHistories } from '../explib';
+import { getWalletFromDerivationPath, toHDPrivateKey } from './decredlib';
 
 const SATOSHIS_PER_XEC = 1e8;
 const STRINGIFIED_INTEGER_REGEX = /^[0-9]+$/;
@@ -48,7 +49,7 @@ export const toDCR = satoshis => {
     return new BN(satoshis).div(SATOSHIS_PER_XEC).toNumber();
 };
 
-export const createDecredWallet = async (mnemonicWords, isImport) => {
+export const createDecredWallet = async (mnemonicWords, isImport, seedType) => {
     // Initialize wallet with empty state
     const wallet = {
         state: {
@@ -58,25 +59,11 @@ export const createDecredWallet = async (mnemonicWords, isImport) => {
             activeAddresses: [],
         },
     };
-    var mnemonicObj
-    //create Decred mnemonic
-    if (mnemonicWords) {
-        mnemonicObj = Decred.Mnemonic(mnemonicWords)
-    } else {
-        mnemonicObj = Decred.Mnemonic()
-    }
-
-    if (!mnemonicObj || !mnemonicObj.phrase) {
-        throw new Error(
-            `Error mnemonic: Create mnemonic failed`,
-        );
-    }
-
     // Set wallet mnemonic
-    wallet.mnemonic = mnemonicObj.phrase;
-    const fullDerivationPath = `m/44'/${DerivationPath()}'/0'/0/0`;
+    wallet.mnemonic = mnemonicWords;
+    wallet.seedType = seedType;
     // Derive a child key from the HD key using the defined path
-    const child = mnemonicObj.toHDPrivateKey(getNetworkName()).derive(fullDerivationPath)
+    const child = getWalletFromDerivationPath(mnemonicWords, seedType)
     const pathInfo = {
         address: child.publicKey.toAddress().toString(),
         privateKey: child.privateKey.toString(),
@@ -250,12 +237,25 @@ export const syncDecredWalletData = async (activeWallet, wallets, updateDecredSt
             activeWallet,
             ...wallets.slice(1),
         ]);
-        const mnemonicObj = Decred.Mnemonic(mnemonics)
+        let mnemonicObj
+        let bip39SeedBuf
+        const seedType = activeWallet.seedType
+        if (seedType == 17 || seedType == 33) {
+            mnemonicObj = Decred.Mnemonic(mnemonics)
+        } else {
+            const bip39Seed = bip39.mnemonicToSeedSync(mnemonics);
+            bip39SeedBuf = Buffer.from(bip39Seed, "hex")
+        }
         for (let account = 0; account < 10; account++) {
             for (let change = 0; change <= 1; change++) {
                 for (let index = 0; index < 200; index++) {
                     const derivationPath = `m/44'/${DerivationPath()}'/${account}'/${change}/${index}`;
-                    const child = mnemonicObj.toHDPrivateKey(getNetworkName()).derive(derivationPath)
+                    let child
+                    if (seedType == 17 || seedType == 33) {
+                        child = mnemonicObj.toHDPrivateKey(getNetworkName()).derive(derivationPath)
+                    } else {
+                        child = toHDPrivateKey(getNetworkName(), bip39SeedBuf).derive(derivationPath);
+                    }
                     addressList.push({
                         address: child.publicKey.toAddress().toString(),
                         privateKey: child.privateKey.toString(),

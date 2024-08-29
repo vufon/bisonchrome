@@ -9,7 +9,7 @@ import { validateMnemonic } from '../../validation/index';
 import appConfig from '../../config/app';
 import { WelcomeCtn, WelcomeLink, WelcomeText } from './styles';
 import Modal from '../common/Modal';
-import { ModalInput } from '../common/Inputs';
+import { CurrencyDropdown, ModalInput } from '../common/Inputs';
 import { createDecredWallet } from '../../wallet';
 import { generateMnemonic } from '../wallets';
 
@@ -20,6 +20,8 @@ const OnBoarding = () => {
 
     const [importedMnemonic, setImportedMnemonic] = useState('');
     const [showImportWalletModal, setShowImportWalletModal] = useState(false);
+    const [showWordSeedTypeModal, setShowWordSeedTypeModal] = useState(false);
+    const [wordSeedType, setWordSeedType] = useState(12);
     // Initialize as true so that validation error only renders after user input
     const [isValidMnemonic, setIsValidMnemonic] = useState(true);
 
@@ -27,18 +29,10 @@ const OnBoarding = () => {
         // Event("Category", "Action", "Label")
         // Track number of created wallets from onboarding
         //Event('Onboarding.js', 'Create Wallet', 'Imported');
-        const importedWallet = await createDecredWallet(importedMnemonic, true);
+        const importedWallet = await createDecredWallet(importedMnemonic, true, wordSeedType);
         updateDecredState('wallets', [...wallets, importedWallet]);
         // Close the modal
         setShowImportWalletModal(false);
-    }
-
-    async function createNewWallet() {
-        // Event("Category", "Action", "Label")
-        // Track number of created wallets from onboarding
-        //Event('Onboarding.js', 'Create Wallet', 'New');
-        const newWallet = await createDecredWallet(generateMnemonic(), false);
-        updateDecredState('wallets', [...wallets, newWallet]);
     }
 
     const handleInput = e => {
@@ -46,22 +40,90 @@ const OnBoarding = () => {
 
         // Validate mnemonic on change
         // Import button should be disabled unless mnemonic is valid
-        setIsValidMnemonic(validateMnemonic(value));
+        setIsValidMnemonic(validateMnemonic(value, wordSeedType));
 
         setImportedMnemonic(value);
     };
 
+    async function createNewWordSeedWallet() {
+        const mnemonicWords = generateMnemonic(wordSeedType)
+        //check word seed type
+        const newWallet = await createDecredWallet(mnemonicWords, false, wordSeedType)
+        updateDecredState('wallets', [...wallets, newWallet]);
+        setShowWordSeedTypeModal(false);
+    }
+    const seedTypeMenuOptions = [];
+    seedTypeMenuOptions.push({
+        label: '12-words seed',
+        value: 12,
+    })
+    seedTypeMenuOptions.push({
+        label: '17-words seed',
+        value: 17,
+    })
+    seedTypeMenuOptions.push({
+        label: '24-words seed',
+        value: 24,
+    })
+    seedTypeMenuOptions.push({
+        label: '33-words seed',
+        value: 33,
+    })
+    const seedTypeOptions = seedTypeMenuOptions.map(menuOption => {
+        return (
+            <CurrencyOption
+                key={menuOption.value}
+                value={menuOption.value}
+                data-testid={menuOption.value}
+            >
+                {menuOption.label}
+            </CurrencyOption>
+        );
+    });
+
     return (
         <>
+            {showWordSeedTypeModal && (
+                <Modal
+                    height={180}
+                    title={`Word Seed Type`}
+                    handleOk={createNewWordSeedWallet}
+                    handleCancel={() => setShowWordSeedTypeModal(false)}
+                    showCancelButton
+                >
+                    <div className='flex-center mt-10'>
+                        <CurrencyDropdown
+                            data-testid={'word-seed-type-select'}
+                            value={wordSeedType}
+                            onChange={e => {
+                                setWordSeedType(e.target.value)
+                            }}
+                        >
+                            {seedTypeOptions}
+                        </CurrencyDropdown>
+                    </div>
+                </Modal>
+            )}
             {showImportWalletModal && (
                 <Modal
-                    height={198}
+                    height={275}
                     title={`Import wallet`}
                     handleOk={importWallet}
                     handleCancel={() => setShowImportWalletModal(false)}
                     showCancelButton
                     disabled={!isValidMnemonic || importedMnemonic === ''}
                 >
+                    <div className='flex-center mt-10 mb-10'>
+                        <CurrencyDropdown
+                            data-testid={'word-seed-type-select'}
+                            value={wordSeedType}
+                            onChange={e => {
+                                setWordSeedType(e.target.value)
+                            }}
+                        >
+                            {seedTypeOptions}
+                        </CurrencyDropdown>
+                    </div>
                     <ModalInput
                         type="email"
                         placeholder="mnemonic (seed phrase)"
@@ -89,7 +151,7 @@ const OnBoarding = () => {
                     non-custodial web wallet for {appConfig.name}.
                 </WelcomeText>
 
-                <PrimaryButton onClick={() => createNewWallet()}>
+                <PrimaryButton onClick={() => setShowWordSeedTypeModal(true)}>
                     New Wallet
                 </PrimaryButton>
 

@@ -2,7 +2,7 @@ import BackupWallet from "./BackupWallet";
 import AddressQR from "./AddressQR";
 import { WalletContext } from "../wallet/context";
 import React from "react";
-import { cleanParsedTxHistory, getWalletState } from "../wallet";
+import { cleanParsedTxHistory, getNetworkName, getWalletState } from "../wallet";
 import { getUserLocale } from "../utils/helpers";
 import TxHistory from "./home/TxHistory";
 import styled from 'styled-components';
