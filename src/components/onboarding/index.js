@@ -9,7 +9,7 @@ import { validateMnemonic } from '../../validation/index';
 import appConfig from '../../config/app';
 import { WelcomeCtn, WelcomeLink, WelcomeText } from './styles';
 import Modal from '../common/Modal';
-import { CurrencyDropdown, ModalInput } from '../common/Inputs';
+import { CurrencyDropdown, CurrencyOption, ModalInput } from '../common/Inputs';
 import { createDecredWallet } from '../../wallet';
 import { generateMnemonic } from '../wallets';
 

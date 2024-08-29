@@ -93,16 +93,18 @@ const Configure = () => {
                 </ConfigIconWrapper>{' '}
                 <Headline>Fiat Currency</Headline>
             </HeadlineAndIcon>
-            <CurrencySelect
-                name="configure-fiat-select"
-                value={decredState.settings.fiatCurrency}
-                handleSelect={e => {
-                    updateDecredState('settings', {
-                        ...settings,
-                        fiatCurrency: e.target.value,
-                    });
-                }}
-            />
+            <div className='flex-center'>
+                <CurrencySelect
+                    name="configure-fiat-select"
+                    value={decredState.settings.fiatCurrency}
+                    handleSelect={e => {
+                        updateDecredState('settings', {
+                            ...settings,
+                            fiatCurrency: e.target.value,
+                        });
+                    }}
+                />
+            </div>
             <StyledSpacer />
             <HeadlineAndIcon>
                 <ConfigIconWrapper>
