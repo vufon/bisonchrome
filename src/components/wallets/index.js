@@ -35,7 +35,7 @@ import { toast } from 'react-toastify';
 import { toFormattedXec } from '../../utils/formatting';
 import { getUserLocale } from '../../utils/helpers';
 import Modal from '../../components/common/Modal';
-import { getWalletNameError, validateMnemonic } from '../../validation';
+import { getWalletNameError, getWordSeedTypeFromMnemonic, validateMnemonic } from '../../validation';
 import { CurrencyDropdown, CurrencyOption, CurrencySelect, ModalInput } from '../../components/common/Inputs';
 import debounce from 'lodash.debounce';
 import { DerivationPath } from '../../utils/const';
@@ -78,21 +78,8 @@ const Wallets = () => {
     const [formDataErrors, setFormDataErrors] = useState(emptyFormDataErrors);
     const [walletToBeDeleted, setWalletToBeDeleted] = useState(null);
     const [showImportWalletModal, setShowImportWalletModal] = useState(false);
-    const [showWordSeedTypeModal, setShowWordSeedTypeModal] = useState(false);
     const [walletToBeRenamed, setWalletToBeRenamed] = useState(null);
-    const [wordSeedType, setWordSeedType] = useState(12);
     const userLocale = getUserLocale(navigator);
-
-    const wordSeedTypeChange = e => {
-        setWordSeedType(e.target.value)
-        setFormDataErrors(previous => ({
-            ...previous,
-            ['mnemonic']:
-                validateMnemonic(formData.mnemonic, e.target.value) === true
-                    ? false
-                    : 'Invalid mnemonic',
-        }));
-    }
 
     const handleInput = e => {
         const { name, value } = e.target;
@@ -117,7 +104,7 @@ const Wallets = () => {
             setFormDataErrors(previous => ({
                 ...previous,
                 [name]:
-                    validateMnemonic(value, wordSeedType) === true
+                    validateMnemonic(value) === true
                         ? false
                         : 'Invalid mnemonic',
             }));
@@ -129,10 +116,9 @@ const Wallets = () => {
     };
 
     async function createNewWordSeedWallet() {
-        const mnemonicWords = generateMnemonic(wordSeedType)
+        const mnemonicWords = generateMnemonic(12)
         //check word seed type
-        const newWallet = await createDecredWallet(mnemonicWords, false, wordSeedType)
-        setShowWordSeedTypeModal(false);
+        const newWallet = await createDecredWallet(mnemonicWords, false, 12)
         const walletAlreadyInWalletsSomehow = wallets.find(
             wallet =>
                 wallet.name === newWallet.name ||
@@ -166,9 +152,9 @@ const Wallets = () => {
             // Do not clear form data in this case
             return;
         }
-
+        const wordsSize = getWordSeedTypeFromMnemonic(formData.mnemonic)
         // Create a new wallet from mnemonic
-        const newImportedWallet = await createDecredWallet(formData.mnemonic, true, wordSeedType);
+        const newImportedWallet = await createDecredWallet(formData.mnemonic, true, wordsSize);
 
         // Handle edge case of another wallet having the same name
         const existingWalletHasSameName = wallets.find(
@@ -335,27 +321,6 @@ const Wallets = () => {
 
     return (
         <>
-            {showWordSeedTypeModal && (
-                <Modal
-                    height={180}
-                    title={`Word Seed Type`}
-                    handleOk={createNewWordSeedWallet}
-                    handleCancel={() => setShowWordSeedTypeModal(false)}
-                    showCancelButton
-                >
-                    <div className='flex-center mt-10'>
-                        <CurrencyDropdown
-                            data-testid={'word-seed-type-select'}
-                            value={wordSeedType}
-                            onChange={e => {
-                                setWordSeedType(e.target.value)
-                            }}
-                        >
-                            {seedTypeOptions}
-                        </CurrencyDropdown>
-                    </div>
-                </Modal>
-            )}
             {walletToBeRenamed !== null && (
                 <Modal
                     height={180}
@@ -379,7 +344,7 @@ const Wallets = () => {
             )}
             {showImportWalletModal && (
                 <Modal
-                    height={260}
+                    height={210}
                     title={`Import wallet`}
                     handleOk={importNewWallet}
                     handleCancel={() => setShowImportWalletModal(false)}
@@ -389,15 +354,6 @@ const Wallets = () => {
                         formData.mnemonic === ''
                     }
                 >
-                    <div className='flex-center mt-10 mb-10'>
-                        <CurrencyDropdown
-                            data-testid={'word-seed-type-select'}
-                            value={wordSeedType}
-                            onChange={wordSeedTypeChange}
-                        >
-                            {seedTypeOptions}
-                        </CurrencyDropdown>
-                    </div>
                     <ModalInput
                         type="email"
                         placeholder="mnemonic (seed phrase)"
@@ -534,7 +490,7 @@ const Wallets = () => {
                     )}
                 </WalletsPanel>
                 <WalletRow>
-                    <PrimaryButton onClick={() => setShowWordSeedTypeModal(true)}>
+                    <PrimaryButton onClick={() => createNewWordSeedWallet()}>
                         New Wallet
                     </PrimaryButton>
                 </WalletRow>

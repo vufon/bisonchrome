@@ -58,16 +58,15 @@ export const isValidAliasSendInput = sendToAliasInput => {
 
 export const validateMnemonic = (
     mnemonic,
-    seedType,
     wordlist = Decred.Mnemonic.Words.ENGLISH,
 ) => {
     try {
         if (!mnemonic || !wordlist) return false;
         // Preprocess the words
-        const words = mnemonic.trim().split(' ');
+        const wordsSize = getWordSeedTypeFromMnemonic(mnemonic)
         // Detect blank phrase
-        if (words.length === 0 || words.length != seedType) return false;
-        if (seedType == 17 || seedType == 33) {
+        if (wordsSize === 0 || (wordsSize != 12 && wordsSize != 17 && wordsSize != 24 && wordsSize != 33)) return false;
+        if (wordsSize == 17 || wordsSize == 33) {
             // Check the words are valid
             return Decred.Mnemonic.isValid(mnemonic, wordlist)
         }
@@ -77,6 +76,17 @@ export const validateMnemonic = (
         return false;
     }
 };
+
+export function getWordSeedTypeFromMnemonic(mnemonic) {
+    const words = mnemonic.trim().split(' ');
+    const wordArr = []
+    words.forEach((word) => {
+        if (word.trim() !== '') {
+            wordArr.push(word.trim())
+        }
+    })
+    return wordArr.length
+}
 
 export function parseAddressInput(
     addressInput,

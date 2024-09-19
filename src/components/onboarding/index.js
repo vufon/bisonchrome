@@ -5,7 +5,7 @@
 import React, { useState } from 'react';
 import { WalletContext } from '../../wallet/context';
 import PrimaryButton, { SecondaryButton } from '../common/Buttons';
-import { validateMnemonic } from '../../validation/index';
+import { getWordSeedTypeFromMnemonic, validateMnemonic } from '../../validation/index';
 import appConfig from '../../config/app';
 import { WelcomeCtn, WelcomeLink, WelcomeText } from './styles';
 import Modal from '../common/Modal';
@@ -20,8 +20,6 @@ const OnBoarding = () => {
 
     const [importedMnemonic, setImportedMnemonic] = useState('');
     const [showImportWalletModal, setShowImportWalletModal] = useState(false);
-    const [showWordSeedTypeModal, setShowWordSeedTypeModal] = useState(false);
-    const [wordSeedType, setWordSeedType] = useState(12);
     // Initialize as true so that validation error only renders after user input
     const [isValidMnemonic, setIsValidMnemonic] = useState(true);
 
@@ -29,7 +27,8 @@ const OnBoarding = () => {
         // Event("Category", "Action", "Label")
         // Track number of created wallets from onboarding
         //Event('Onboarding.js', 'Create Wallet', 'Imported');
-        const importedWallet = await createDecredWallet(importedMnemonic, true, wordSeedType);
+        const wordsSize = getWordSeedTypeFromMnemonic(importedMnemonic)
+        const importedWallet = await createDecredWallet(importedMnemonic, true, wordsSize);
         updateDecredState('wallets', [...wallets, importedWallet]);
         // Close the modal
         setShowImportWalletModal(false);
@@ -40,15 +39,15 @@ const OnBoarding = () => {
 
         // Validate mnemonic on change
         // Import button should be disabled unless mnemonic is valid
-        setIsValidMnemonic(validateMnemonic(value, wordSeedType));
+        setIsValidMnemonic(validateMnemonic(value));
 
         setImportedMnemonic(value);
     };
 
     async function createNewWordSeedWallet() {
-        const mnemonicWords = generateMnemonic(wordSeedType)
+        const mnemonicWords = generateMnemonic(12)
         //check word seed type
-        const newWallet = await createDecredWallet(mnemonicWords, false, wordSeedType)
+        const newWallet = await createDecredWallet(mnemonicWords, false, 12)
         updateDecredState('wallets', [...wallets, newWallet]);
         setShowWordSeedTypeModal(false);
     }
@@ -83,47 +82,15 @@ const OnBoarding = () => {
 
     return (
         <>
-            {showWordSeedTypeModal && (
-                <Modal
-                    height={180}
-                    title={`Word Seed Type`}
-                    handleOk={createNewWordSeedWallet}
-                    handleCancel={() => setShowWordSeedTypeModal(false)}
-                    showCancelButton
-                >
-                    <div className='flex-center mt-10'>
-                        <CurrencyDropdown
-                            data-testid={'word-seed-type-select'}
-                            value={wordSeedType}
-                            onChange={e => {
-                                setWordSeedType(e.target.value)
-                            }}
-                        >
-                            {seedTypeOptions}
-                        </CurrencyDropdown>
-                    </div>
-                </Modal>
-            )}
             {showImportWalletModal && (
                 <Modal
-                    height={275}
+                    height={210}
                     title={`Import wallet`}
                     handleOk={importWallet}
                     handleCancel={() => setShowImportWalletModal(false)}
                     showCancelButton
                     disabled={!isValidMnemonic || importedMnemonic === ''}
                 >
-                    <div className='flex-center mt-10 mb-10'>
-                        <CurrencyDropdown
-                            data-testid={'word-seed-type-select'}
-                            value={wordSeedType}
-                            onChange={e => {
-                                setWordSeedType(e.target.value)
-                            }}
-                        >
-                            {seedTypeOptions}
-                        </CurrencyDropdown>
-                    </div>
                     <ModalInput
                         type="email"
                         placeholder="mnemonic (seed phrase)"
@@ -151,7 +118,7 @@ const OnBoarding = () => {
                     non-custodial web wallet for {appConfig.name}.
                 </WelcomeText>
 
-                <PrimaryButton onClick={() => setShowWordSeedTypeModal(true)}>
+                <PrimaryButton onClick={() => createNewWordSeedWallet()}>
                     New Wallet
                 </PrimaryButton>
 
