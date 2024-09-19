@@ -6,8 +6,8 @@ export const TESTNET_EXPLORER_API = 'https://testnet.blockcare.pro/api'
 export const MAINET_EXPLORER_API = 'https://blockcare.pro/api'
 export const TESTNET_BROADCAST_API = 'https://testnet.blockcare.pro/api'
 export const MAINET_BROADCAST_API = 'https://blockcare.pro/api'
-export const TESTNET_EXPLORER_URL = 'https://testnet.dcrdata.org'
-export const MAINET_EXPLORER_URL = 'https://dcrdata.decred.org'
+export const TESTNET_EXPLORER_URL = 'https://testnet.blockcare.pro'
+export const MAINET_EXPLORER_URL = 'https://blockcare.pro'
 
 export const getWalletData = async (wallet) => {
     const walletData = {

@@ -80,10 +80,8 @@ export const ThemedFacebookIcon = styled(Facebook)`
     width: 100%;
 `;
 export const SocialContainer = styled.div`
-    margin: auto;
     display: flex;
     align-items: center;
-    justify-content: space-between;
     width: 220px;
     height: 42px;
 `;

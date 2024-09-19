@@ -13,9 +13,13 @@ export class CashtabSettings {
         hideMessagesFromUnknownSenders = false,
         balanceVisible = true,
         minFeeSends = false,
+        customFeeRate = false,
+        feeRate = 0.0002,
     ) {
         this.fiatCurrency = fiatCurrency;
         this.sendModal = sendModal;
+        this.feeRate = feeRate;
+        this.customFeeRate = customFeeRate;
         this.autoCameraOn = autoCameraOn;
         this.hideMessagesFromUnknownSenders = hideMessagesFromUnknownSenders;
         this.balanceVisible = balanceVisible;

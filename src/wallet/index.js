@@ -165,7 +165,7 @@ export const getMaxSendAmountSatoshis = (
     };
 };
 
-export const EstimateFee = (wallet, amount) => {
+export const EstimateFee = (wallet, amount, settings) => {
     const dcrInputs = wallet.state.Utxos
     const wif = wallet.paths[DerivationPath()].wif
     var privateKey = new Decred.PrivateKey(wif)
@@ -174,10 +174,14 @@ export const EstimateFee = (wallet, amount) => {
         .from(dcrInputs)
         .to(getDumpAddress(), amount)
         .change(address.toString())
-    return tempTx.getFee()
+    if (settings.customFeeRate) {
+        tempTx._feePerKb = toSatoshis(settings.feeRate)
+    }
+    var fee = tempTx.getFee()
+    return fee
 }
 
-export const SendToMutilAddress = (wallet, addresses) => {
+export const SendToMutilAddress = (wallet, addresses, settings) => {
     const dcrInputs = wallet.state.Utxos
     const wif = wallet.paths[DerivationPath()].wif
     var privateKey = new Decred.PrivateKey(wif)
@@ -200,10 +204,14 @@ export const SendToMutilAddress = (wallet, addresses) => {
             }
         })
     }
+
     var resultTx = new Decred.Transaction()
         .from(dcrInputs)
         .to(addresses)
-        .change(changeAddress.toString())
+    if (settings.customFeeRate) {
+        resultTx._feePerKb = toSatoshis(settings.feeRate)
+    }
+    resultTx.change(changeAddress.toString())
         .sign(privateKeys)
     var fee = resultTx.getFee()
     const totalSatsInWallet = dcrInputs.reduce(

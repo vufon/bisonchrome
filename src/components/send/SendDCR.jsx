@@ -284,7 +284,7 @@ const SendDCR = ({ addressInput = '' }) => {
     isValidAmount(value)
     if (!sendAmountError) {
       //estimate fee
-      setFeeEstimate(EstimateFee(wallet, toSatoshis(value)))
+      setFeeEstimate(EstimateFee(wallet, toSatoshis(value), settings))
     }
     postHandlerAmountChange(e)
   };
@@ -423,7 +423,7 @@ const SendDCR = ({ addressInput = '' }) => {
     }
     //send amount
     try {
-      const txResult = SendToMutilAddress(wallet, addresses)
+      const txResult = SendToMutilAddress(wallet, addresses, settings)
       if (txResult.tx && txResult.tx.hash) {
         //broadcast tx to network
         const broadCastData = await broadcastTx(txResult.hex, 0)

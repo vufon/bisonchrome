@@ -85,7 +85,6 @@ const Wallets = () => {
 
     const wordSeedTypeChange = e => {
         setWordSeedType(e.target.value)
-        console.log('seed type: ' + e.target.value)
         setFormDataErrors(previous => ({
             ...previous,
             ['mnemonic']:
