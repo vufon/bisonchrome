@@ -10,13 +10,13 @@ import Switch from '../common/Switch';
 import { Alert, Info } from '../common/Atoms';
 import { getUserLocale } from '../../utils/helpers';
 import { WalletContext } from '../../wallet/context';
+import { HomeBackupArea } from '../Home';
 
 const BackupFlex = styled.div`
-    margin: 12px 0;
     display: flex;
     flex-direction: column;
     align-items: center;
-    row-gap: 30px;
+    row-gap: 20px;
     color: ${props => props.theme.contrast};
     justify-content: flex-start;
 `;
@@ -29,7 +29,7 @@ const FlexRow = styled.div`
 const SwitchRow = styled.div`
     display: flex;
     align-items: center;
-    justify-content: flex-start;
+    justify-content: center;
     width: 100%;
     gap: 12px;
 `;
@@ -45,47 +45,49 @@ const BackupWallet = () => {
     const wallet = wallets.length > 0 ? wallets[0] : false;
 
     return (
-        <BackupFlex>
-            <FlexRow>
-                <Info>
-                    ℹ️ Your seed phrase is the only way to restore your wallet.
-                    Write it down. Keep it safe.
-                </Info>
-            </FlexRow>
-            <FlexRow>
-                <Alert className="notranslate">
-                    <b>
-                        ⚠️ NEVER SHARE YOUR SEED PHRASE
-                        {!userLocale.includes('en-') && (
-                            <>
-                                <br />
-                                <br />
-                                ⚠️ STORE YOUR SEED PHRASE IN ENGLISH
-                            </>
-                        )}
-                    </b>
-                </Alert>
-            </FlexRow>
-            <SwitchRow>
-                <Switch
-                    name="send-confirmations-switch"
-                    checked={showSeed}
-                    handleToggle={() => setShowSeed(!showSeed)}
-                />
-                <SwitchLabel>Show seed phrase</SwitchLabel>
-            </SwitchRow>
-            <FlexRow>
-                {showSeed && wallet && (
-                    <CopyToClipboard
-                        data={wallet.mnemonic}
-                        showToast
-                        customMsg={'Copied seed phrase'}
-                    >
-                        <Seed mnemonic={wallet.mnemonic} />
-                    </CopyToClipboard>
-                )}
-            </FlexRow>
-        </BackupFlex>
+        <HomeBackupArea>
+            <BackupFlex>
+                <FlexRow>
+                    <Info>
+                        ℹ️ Your seed phrase is the only way to restore your wallet.
+                        Write it down. Keep it safe.
+                    </Info>
+                </FlexRow>
+                <FlexRow>
+                    <Alert className="notranslate">
+                        <b>
+                            ⚠️ NEVER SHARE YOUR SEED PHRASE
+                            {!userLocale.includes('en-') && (
+                                <>
+                                    <br />
+                                    <br />
+                                    ⚠️ STORE YOUR SEED PHRASE IN ENGLISH
+                                </>
+                            )}
+                        </b>
+                    </Alert>
+                </FlexRow>
+                <SwitchRow>
+                    <Switch
+                        name="send-confirmations-switch"
+                        checked={showSeed}
+                        handleToggle={() => setShowSeed(!showSeed)}
+                    />
+                    <SwitchLabel>Show seed phrase</SwitchLabel>
+                </SwitchRow>
+                <FlexRow>
+                    {showSeed && wallet && (
+                        <CopyToClipboard
+                            data={wallet.mnemonic}
+                            showToast
+                            customMsg={'Copied seed phrase'}
+                        >
+                            <Seed mnemonic={wallet.mnemonic} />
+                        </CopyToClipboard>
+                    )}
+                </FlexRow>
+            </BackupFlex>
+        </HomeBackupArea>
     );
 };
 

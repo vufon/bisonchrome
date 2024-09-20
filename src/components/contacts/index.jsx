@@ -27,6 +27,8 @@ import {
     ContactListName,
     ButtonPanel,
 } from './styles';
+import { HomeBackupArea } from '../Home';
+import { WalletButtonRow } from '../wallets/styles';
 export default function Contacts({ setSendPage }) {
     const ContextValue = React.useContext(WalletContext);
     const { updateDecredState, decredState } = ContextValue;
@@ -287,73 +289,75 @@ export default function Contacts({ setSendPage }) {
                     </InputFlex>
                 </Modal>
             )}
-            <ContactList title="Contacts">
-                <ContactsPanel>
-                    {contactList && contactList.length > 0 ? (
-                        contactList.map((contact, index) => (
-                            <Row key={index}>
-                                <ContactListName>
-                                    {contact.name}
-                                </ContactListName>
-                                <ButtonPanel>
-                                    <CopyIconButton
-                                        name={`Copy ${contact.name}`}
-                                        data={contact.address}
-                                        showToast
-                                    />
-                                    <IconButton
-                                        name={`Rename ${contact.name}`}
-                                        icon={<EditIcon />}
-                                        onClick={() =>
-                                            setContactToBeRenamed(contact)
-                                        }
-                                    />
-                                    <IconButton
-                                        name={`Send to ${contact.name}`}
-                                        icon={<SendIcon />}
-                                        state={{
-                                            contactSend: contact.address,
-                                        }}
-                                        onClick={() => sendToAddress(contact.address)}
-                                    />
-                                    <IconButton
-                                        name={`Delete ${contact.name}`}
-                                        icon={<TrashcanIcon />}
-                                        onClick={() =>
-                                            setContactToBeDeleted(contact)
-                                        }
-                                    />
-                                </ButtonPanel>
-                            </Row>
-                        ))
-                    ) : (
-                        <div>
-                            <p>{'Your contact list is empty.'}</p>
-                            <p>
-                                {
-                                    'Contacts can be added by clicking on a received transaction and looking for the "Add to contacts" icon or via the "New Contact" button below.'
-                                }
-                            </p>
-                        </div>
-                    )}
-                </ContactsPanel>
-                <ButtonRow>
-                    <PrimaryButton
-                        onClick={() => setShowAddNewContactModal(true)}
-                    >
-                        Add Contact
-                    </PrimaryButton>
-                </ButtonRow>
-                {contactList && contactList.length > 0 && (
-                    <ButtonRow>
-                        <SecondaryButton
-                            onClick={() => exportContactList(contactList)}
+            <HomeBackupArea>
+                <ContactList title="Contacts">
+                    <ContactsPanel>
+                        {contactList && contactList.length > 0 ? (
+                            contactList.map((contact, index) => (
+                                <Row key={index}>
+                                    <ContactListName>
+                                        {contact.name}
+                                    </ContactListName>
+                                    <ButtonPanel>
+                                        <CopyIconButton
+                                            name={`Copy ${contact.name}`}
+                                            data={contact.address}
+                                            showToast
+                                        />
+                                        <IconButton
+                                            name={`Rename ${contact.name}`}
+                                            icon={<EditIcon />}
+                                            onClick={() =>
+                                                setContactToBeRenamed(contact)
+                                            }
+                                        />
+                                        <IconButton
+                                            name={`Send to ${contact.name}`}
+                                            icon={<SendIcon />}
+                                            state={{
+                                                contactSend: contact.address,
+                                            }}
+                                            onClick={() => sendToAddress(contact.address)}
+                                        />
+                                        <IconButton
+                                            name={`Delete ${contact.name}`}
+                                            icon={<TrashcanIcon />}
+                                            onClick={() =>
+                                                setContactToBeDeleted(contact)
+                                            }
+                                        />
+                                    </ButtonPanel>
+                                </Row>
+                            ))
+                        ) : (
+                            <div>
+                                <p>{'Your contact list is empty.'}</p>
+                                <p>
+                                    {
+                                        'Contacts can be added by clicking on a received transaction and looking for the "Add to contacts" icon or via the "New Contact" button below.'
+                                    }
+                                </p>
+                            </div>
+                        )}
+                    </ContactsPanel>
+                    <WalletButtonRow>
+                        <PrimaryButton
+                            onClick={() => setShowAddNewContactModal(true)}
                         >
-                            Export
-                        </SecondaryButton>
-                    </ButtonRow>
-                )}
-            </ContactList>
+                            Add Contact
+                        </PrimaryButton>
+                    </WalletButtonRow>
+                    {contactList && contactList.length > 0 && (
+                        <WalletButtonRow>
+                            <SecondaryButton
+                                onClick={() => exportContactList(contactList)}
+                            >
+                                Export
+                            </SecondaryButton>
+                        </WalletButtonRow>
+                    )}
+                </ContactList>
+            </HomeBackupArea>
         </>
     );
 };

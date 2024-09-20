@@ -5,8 +5,7 @@
 import styled from 'styled-components';
 
 export const ContactList = styled.div`
-    margin-top: 24px;
-    padding: 12px;
+    padding: 0 12px;
     display: flex;
     flex-direction: column;
     width: 100%;
@@ -27,6 +26,7 @@ export const ContactsPanel = styled.div`
     padding: 12px;
     width: 100%;
     background-color: ${props => props.theme.panel};
+    border: 1px solid #383f4b;
     border-radius: 9px;
     margin-bottom: 12px;
 `;

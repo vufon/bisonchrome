@@ -214,7 +214,7 @@ export const NavItem = styled.button`
     width: 100%;
     white-space: nowrap;
     background-color: ${props => props.theme.walletBackground};
-    border: 1px solid ${props => props.theme.walletBackground};
+    border-bottom: 1px solid ${props => props.theme.borderColor};
     color: ${props => props.theme.contrast};
     gap: 6px;
     cursor: pointer;

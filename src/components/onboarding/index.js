@@ -12,6 +12,7 @@ import Modal from '../common/Modal';
 import { CurrencyDropdown, CurrencyOption, ModalInput } from '../common/Inputs';
 import { createDecredWallet } from '../../wallet';
 import { generateMnemonic } from '../wallets';
+import { WalletButtonRow } from '../wallets/styles';
 
 const OnBoarding = () => {
     const ContextValue = React.useContext(WalletContext);
@@ -117,14 +118,16 @@ const OnBoarding = () => {
                     </WelcomeLink>{' '}
                     non-custodial web wallet for {appConfig.name}.
                 </WelcomeText>
-
-                <PrimaryButton onClick={() => createNewWordSeedWallet()}>
-                    New Wallet
-                </PrimaryButton>
-
-                <SecondaryButton onClick={() => setShowImportWalletModal(true)}>
-                    Import Wallet
-                </SecondaryButton>
+                <WalletButtonRow>
+                    <PrimaryButton onClick={() => createNewWordSeedWallet()}>
+                        New Wallet
+                    </PrimaryButton>
+                </WalletButtonRow>
+                <WalletButtonRow>
+                    <SecondaryButton onClick={() => setShowImportWalletModal(true)}>
+                        Import Wallet
+                    </SecondaryButton>
+                </WalletButtonRow>
             </WelcomeCtn>
         </>
     );

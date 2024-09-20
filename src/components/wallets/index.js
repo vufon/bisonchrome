@@ -26,6 +26,7 @@ import {
     SvgButtonPanel,
     WalletBalance,
     ActivateButton,
+    WalletButtonRow,
 } from './styles';
 import * as bip39 from 'bip39';
 import * as randomBytes from 'randombytes';
@@ -41,6 +42,7 @@ import debounce from 'lodash.debounce';
 import { DerivationPath } from '../../utils/const';
 import * as Decred from 'decredjs-lib'
 import appConfig from '../../config/app';
+import { HomeBackupArea } from '../Home';
 
 //TODO: 
 export const generateMnemonic = (seedType) => {
@@ -385,121 +387,123 @@ const Wallets = () => {
                     />
                 </Modal>
             )}
-            <WalletsList title="Wallets">
-                <WalletsPanel>
-                    {wallets.map((wallet, index) =>
-                        index === 0 ? (
-                            <WalletRow key={`${wallet.name}_${index}`}>
-                                <ActiveWalletName className="notranslate">
-                                    {wallet.name}
-                                </ActiveWalletName>
-                                <h4 className='fs-18'>(active)</h4>
-                                <SvgButtonPanel>
-                                    <CopyIconButton
-                                        name={`Copy address of ${wallet.name}`}
-                                        data={wallet.paths[DerivationPath()].address}
-                                        showToast
-                                    />
-                                    <IconButton
-                                        name={`Rename ${wallet.name}`}
-                                        icon={<EditIcon />}
-                                        onClick={() =>
-                                            setWalletToBeRenamed(wallet)
-                                        }
-                                    />
-                                    <IconButton
-                                        name={`Add ${wallet.name} to contacts`}
-                                        icon={<AddContactIcon />}
-                                        onClick={() =>
-                                            addWalletToContacts(wallet)
-                                        }
-                                    />
-                                    <IconButton
-                                        name={`Sync ${wallet.name} wallet data`}
-                                        icon={<SyncIcon />}
-                                        onClick={() =>
-                                            syncWalletData(wallet)
-                                        }
-                                    />
-                                </SvgButtonPanel>
-                            </WalletRow>
-                        ) : (
-                            <Wallet key={`${wallet.name}_${index}`}>
-                                <WalletRow>
-                                    <WalletName>
-                                        <h3 className="overflow notranslate fs-19">
-                                            {wallet.name}
-                                        </h3>
-                                    </WalletName>
-                                    <WalletBalance>
-                                        {wallet?.state?.balanceSats !== 0
-                                            ? `${toFormattedXec(
-                                                wallet.state.balanceSats,
-                                                userLocale,
-                                            )} DCR`
-                                            : '-'}
-                                    </WalletBalance>
+            <HomeBackupArea>
+                <WalletsList title="Wallets">
+                    <WalletsPanel>
+                        {wallets.map((wallet, index) =>
+                            index === 0 ? (
+                                <WalletRow key={`${wallet.name}_${index}`}>
+                                    <ActiveWalletName className="notranslate">
+                                        {wallet.name}
+                                    </ActiveWalletName>
+                                    <h4 className='fs-18'>(active)</h4>
+                                    <SvgButtonPanel>
+                                        <CopyIconButton
+                                            name={`Copy address of ${wallet.name}`}
+                                            data={wallet.paths[DerivationPath()].address}
+                                            showToast
+                                        />
+                                        <IconButton
+                                            name={`Rename ${wallet.name}`}
+                                            icon={<EditIcon />}
+                                            onClick={() =>
+                                                setWalletToBeRenamed(wallet)
+                                            }
+                                        />
+                                        <IconButton
+                                            name={`Add ${wallet.name} to contacts`}
+                                            icon={<AddContactIcon />}
+                                            onClick={() =>
+                                                addWalletToContacts(wallet)
+                                            }
+                                        />
+                                        <IconButton
+                                            name={`Sync ${wallet.name} wallet data`}
+                                            icon={<SyncIcon />}
+                                            onClick={() =>
+                                                syncWalletData(wallet)
+                                            }
+                                        />
+                                    </SvgButtonPanel>
                                 </WalletRow>
-                                <ActionsRow>
-                                    <ButtonPanel>
-                                        <SvgButtonPanel>
-                                            <CopyIconButton
-                                                name={`Copy address of ${wallet.name}`}
-                                                data={wallet.paths[DerivationPath()].address}
-                                                showToast
-                                            />
-                                            <IconButton
-                                                name={`Rename ${wallet.name}`}
-                                                icon={<EditIcon />}
-                                                onClick={() =>
-                                                    setWalletToBeRenamed(wallet)
-                                                }
-                                            />
-                                            <IconButton
-                                                name={`Add Account2 to contacts`}
-                                                icon={<AddContactIcon />}
-                                                onClick={() =>
-                                                    addWalletToContacts(wallet)
-                                                }
-                                            />
-                                            <IconButton
-                                                name={`Delete ${wallet.name}`}
-                                                icon={<TrashcanIcon />}
-                                                onClick={() =>
-                                                    setWalletToBeDeleted(wallet)
-                                                }
-                                            />
-                                        </SvgButtonPanel>
-                                        <ActivateButton
-                                            aria-label={`Activate ${wallet.name}`}
-                                            onClick={debounce(
-                                                () =>
-                                                    activateWallet(
-                                                        wallet,
-                                                        wallets,
-                                                    ),
-                                                500,
-                                            )}
-                                        >
-                                            Activate
-                                        </ActivateButton>
-                                    </ButtonPanel>
-                                </ActionsRow>
-                            </Wallet>
-                        ),
-                    )}
-                </WalletsPanel>
-                <WalletRow>
-                    <PrimaryButton onClick={() => createNewWordSeedWallet()}>
-                        New Wallet
-                    </PrimaryButton>
-                </WalletRow>
-                <WalletRow>
-                    <SecondaryButton onClick={() => setShowImportWalletModal(true)}>
-                        Import Wallet
-                    </SecondaryButton>
-                </WalletRow>
-            </WalletsList>
+                            ) : (
+                                <Wallet key={`${wallet.name}_${index}`}>
+                                    <WalletRow>
+                                        <WalletName>
+                                            <h3 className="overflow notranslate fs-19">
+                                                {wallet.name}
+                                            </h3>
+                                        </WalletName>
+                                        <WalletBalance>
+                                            {wallet?.state?.balanceSats !== 0
+                                                ? `${toFormattedXec(
+                                                    wallet.state.balanceSats,
+                                                    userLocale,
+                                                )} DCR`
+                                                : '-'}
+                                        </WalletBalance>
+                                    </WalletRow>
+                                    <ActionsRow>
+                                        <ButtonPanel>
+                                            <SvgButtonPanel>
+                                                <CopyIconButton
+                                                    name={`Copy address of ${wallet.name}`}
+                                                    data={wallet.paths[DerivationPath()].address}
+                                                    showToast
+                                                />
+                                                <IconButton
+                                                    name={`Rename ${wallet.name}`}
+                                                    icon={<EditIcon />}
+                                                    onClick={() =>
+                                                        setWalletToBeRenamed(wallet)
+                                                    }
+                                                />
+                                                <IconButton
+                                                    name={`Add Account2 to contacts`}
+                                                    icon={<AddContactIcon />}
+                                                    onClick={() =>
+                                                        addWalletToContacts(wallet)
+                                                    }
+                                                />
+                                                <IconButton
+                                                    name={`Delete ${wallet.name}`}
+                                                    icon={<TrashcanIcon />}
+                                                    onClick={() =>
+                                                        setWalletToBeDeleted(wallet)
+                                                    }
+                                                />
+                                            </SvgButtonPanel>
+                                            <ActivateButton
+                                                aria-label={`Activate ${wallet.name}`}
+                                                onClick={debounce(
+                                                    () =>
+                                                        activateWallet(
+                                                            wallet,
+                                                            wallets,
+                                                        ),
+                                                    500,
+                                                )}
+                                            >
+                                                Activate
+                                            </ActivateButton>
+                                        </ButtonPanel>
+                                    </ActionsRow>
+                                </Wallet>
+                            ),
+                        )}
+                    </WalletsPanel>
+                    <WalletButtonRow>
+                        <PrimaryButton onClick={() => createNewWordSeedWallet()}>
+                            New Wallet
+                        </PrimaryButton>
+                    </WalletButtonRow>
+                    <WalletButtonRow>
+                        <SecondaryButton onClick={() => setShowImportWalletModal(true)}>
+                            Import Wallet
+                        </SecondaryButton>
+                    </WalletButtonRow>
+                </WalletsList>
+            </HomeBackupArea>
         </>
     );
 };

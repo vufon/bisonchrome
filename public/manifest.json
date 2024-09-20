@@ -1,6 +1,6 @@
 {
-  "name": "Ticketer",
-  "description": "Ticket tracking and productivity helper",
+  "name": "Bison Chrome",
+  "description": "Wallet extension with full support for Decred",
   "version": "1.2",
   "manifest_version": 3,
   "permissions": [

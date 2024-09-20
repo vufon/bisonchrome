@@ -1,7 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap');
 
 :root {
-    --primaryColor: #244261;
+    --primaryColor: #040b14;
     --primaryAccent: #cac4ce;
     --secondaryColor: #242038;
     --secondaryAccent: #cac4ce;
@@ -21,7 +21,7 @@
     font-size: calc(10px + 2vmin);
     color: var(--primaryAccent);
     padding: 10px;
-    padding-bottom: 80px;
+    padding-bottom: 90px;
     font-family: "Inter", sans-serif;
 }
 
@@ -88,7 +88,7 @@ button {
     margin: 0.5em;
     font-weight: bold;
     cursor: pointer;
-    box-shadow: 1px 1px 2px #00212b;
+    box-shadow: 1px 1px 2px #383f4b;
     border-radius: 4px;
     transition-duration: var(--transitionDurationFast);
 }
@@ -120,8 +120,8 @@ svg.svg {
 .card {
     background-color: var(--secondaryColor);
     padding: 10px;
-    margin: 7px;
     border-radius: 5px;
+    border: 1px solid #383f4b !important;
     box-shadow: 3px 3px 4px #00212b;
 }
 
@@ -130,7 +130,8 @@ input {
 }
 
 .card-padding-increase {
-    background: #37668b !important;
+    background: #071627 !important;
+    margin: 7px 0 !important;
 }
 
 /* END Utility classes */

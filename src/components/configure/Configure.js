@@ -20,6 +20,7 @@ import Switch from '../common/Switch';
 import { WalletContext } from '../../wallet/context';
 import PrimaryButton from '../common/Buttons';
 import { toast } from 'react-toastify';
+import { HomeBackupArea } from '../Home';
 
 const VersionContainer = styled.div`
     color: ${props => props.theme.contrast};
@@ -27,13 +28,13 @@ const VersionContainer = styled.div`
 
 const ConfigIconWrapper = styled.div`
     svg {
-        height: 42px;
-        width: 42px;
+        height: 30px;
+        width: 30px;
         fill: ${props => props.theme.eCashBlue};
     }
 `;
 const StyledConfigure = styled.div`
-    margin: 12px 0;
+    margin: 0 0 12px 0;
     width: 70%;
     margin-left: 25px;
 `;
@@ -41,20 +42,25 @@ const StyledConfigure = styled.div`
 const HeadlineAndIcon = styled.div`
     display: flex;
     align-items: center;
+    margin-bottom: 10px;
     gap: 6px;
-    margin: 6px 0;
 `;
 const Headline = styled.div`
-    font-size: 20px;
+    font-size: 18px;
     color: ${props => props.theme.contrast};
     font-weight: bold;
+`;
+
+const ToggleLabel = styled.div`
+    font-size: 17px;
+    color: ${props => props.theme.contrast};
 `;
 
 const StyledSpacer = styled.div`
     height: 1px;
     width: 100%;
     background-color: ${props => props.theme.lightWhite};
-    margin: 25px 0;
+    margin: 20px 0;
 `;
 
 const SettingsLabel = styled.div`
@@ -73,7 +79,7 @@ const Switches = styled.div`
 const IndexHeadline = styled.div`
     font-size: 20px;
     position: absolute;
-    margin-left: 240px;
+    margin-left: 160px;
     color: ${props => props.theme.contrast};
     font-weight: bold;
 `;
@@ -156,110 +162,112 @@ const Configure = () => {
         }
     };
     return (
-        <StyledConfigure title="Settings">
-            <HeadlineAndIcon>
-                <ConfigIconWrapper>
-                    <DollarIcon />
-                </ConfigIconWrapper>{' '}
-                <Headline>Fiat Currency</Headline>
-            </HeadlineAndIcon>
-            <CurrencySelect
-                name="configure-fiat-select"
-                value={decredState.settings.fiatCurrency}
-                handleSelect={e => {
-                    updateDecredState('settings', {
-                        ...settings,
-                        fiatCurrency: e.target.value,
-                    });
-                }}
-            />
-            <StyledSpacer />
-            <HeadlineAndIcon>
-                <ConfigIconWrapper>
-                    <SettingsIcon />
-                </ConfigIconWrapper>{' '}
-                <Headline>General Settings</Headline>
-            </HeadlineAndIcon>
-            <Switches>
-                <GeneralSettingsItem>
-                    <Switch
-                        name="Toggle Send Confirmations"
-                        checked={settings.sendModal}
-                        handleToggle={handleSendModalToggle}
-                    />
-                    <Headline>Send Confirmations</Headline>
-                </GeneralSettingsItem>
-            </Switches>
-            <Switches>
-                <GeneralSettingsItem>
-                    <Switch
-                        name="Custom Fee Rate"
-                        checked={settings.customFeeRate}
-                        handleToggle={handleToggleCustomFeeRate}
-                    />
-                    <Headline>Custom Fee Rate</Headline>
-                </GeneralSettingsItem>
-            </Switches>
-            {useCustomFeeRate ? (
-                <>
-                    <FeeRateArea>
-                        <FeerateInput>
-                            <ModalInput
-                                placeholder="Fee Rate"
-                                name="feerate"
-                                value={feeRate}
-                                handleInput={handleInput}
-                                error={feeRateError}
-                            />
-                            <IndexHeadline>DCR</IndexHeadline>
-                        </FeerateInput>
-                    </FeeRateArea>
-                    <UpdateButtonRow>
-                        <UpdateButton>
-                            <PrimaryButton
-                                onClick={() => updateFeeRate()}
-                                disabled={feeRateError}
-                            >
-                                Update
-                            </PrimaryButton>
-                        </UpdateButton>
-                    </UpdateButtonRow>
-                </>
-            ) : (<></>)}
-            <StyledSpacer />
-            <SocialContainer>
-                <SocialLink
-                    href="https://x.com/decredproject"
-                    target="_blank"
-                    rel="noreferrer"
-                >
-                    <ThemedXIcon />
-                </SocialLink>{' '}
-                <SocialLink
-                    href="https://www.facebook.com/decredproject"
-                    target="_blank"
-                    rel="noreferrer"
-                >
-                    <ThemedFacebookIcon />
-                </SocialLink>
-                <SocialLink
-                    href="https://github.com/decred"
-                    target="_blank"
-                    rel="noreferrer"
-                >
-                    <GithubIcon />
-                </SocialLink>
-            </SocialContainer>
+        <HomeBackupArea>
+            <StyledConfigure title="Settings">
+                <HeadlineAndIcon>
+                    <ConfigIconWrapper>
+                        <DollarIcon />
+                    </ConfigIconWrapper>{' '}
+                    <Headline>Fiat Currency</Headline>
+                </HeadlineAndIcon>
+                <CurrencySelect
+                    name="configure-fiat-select"
+                    value={decredState.settings.fiatCurrency}
+                    handleSelect={e => {
+                        updateDecredState('settings', {
+                            ...settings,
+                            fiatCurrency: e.target.value,
+                        });
+                    }}
+                />
+                <StyledSpacer />
+                <HeadlineAndIcon>
+                    <ConfigIconWrapper>
+                        <SettingsIcon />
+                    </ConfigIconWrapper>{' '}
+                    <Headline>General Settings</Headline>
+                </HeadlineAndIcon>
+                <Switches>
+                    <GeneralSettingsItem>
+                        <Switch
+                            name="Toggle Send Confirmations"
+                            checked={settings.sendModal}
+                            handleToggle={handleSendModalToggle}
+                        />
+                        <ToggleLabel>Send Confirmations</ToggleLabel>
+                    </GeneralSettingsItem>
+                </Switches>
+                <Switches>
+                    <GeneralSettingsItem>
+                        <Switch
+                            name="Custom Fee Rate"
+                            checked={settings.customFeeRate}
+                            handleToggle={handleToggleCustomFeeRate}
+                        />
+                        <ToggleLabel>Custom Fee Rate</ToggleLabel>
+                    </GeneralSettingsItem>
+                </Switches>
+                {useCustomFeeRate ? (
+                    <>
+                        <FeeRateArea>
+                            <FeerateInput>
+                                <ModalInput
+                                    placeholder="Fee Rate"
+                                    name="feerate"
+                                    value={feeRate}
+                                    handleInput={handleInput}
+                                    error={feeRateError}
+                                />
+                                <IndexHeadline>DCR</IndexHeadline>
+                            </FeerateInput>
+                        </FeeRateArea>
+                        <UpdateButtonRow>
+                            <UpdateButton>
+                                <PrimaryButton
+                                    onClick={() => updateFeeRate()}
+                                    disabled={feeRateError}
+                                >
+                                    Update
+                                </PrimaryButton>
+                            </UpdateButton>
+                        </UpdateButtonRow>
+                    </>
+                ) : (<></>)}
+                <StyledSpacer />
+                <SocialContainer>
+                    <SocialLink
+                        href="https://x.com/decredproject"
+                        target="_blank"
+                        rel="noreferrer"
+                    >
+                        <ThemedXIcon />
+                    </SocialLink>{' '}
+                    <SocialLink
+                        href="https://www.facebook.com/decredproject"
+                        target="_blank"
+                        rel="noreferrer"
+                    >
+                        <ThemedFacebookIcon />
+                    </SocialLink>
+                    <SocialLink
+                        href="https://github.com/decred"
+                        target="_blank"
+                        rel="noreferrer"
+                    >
+                        <GithubIcon />
+                    </SocialLink>
+                </SocialContainer>
 
-            {typeof process.env.REACT_APP_VERSION === 'string' && (
-                <>
-                    <StyledSpacer />
-                    <VersionContainer>
-                        v{process.env.REACT_APP_VERSION}
-                    </VersionContainer>
-                </>
-            )}
-        </StyledConfigure>
+                {typeof process.env.REACT_APP_VERSION === 'string' && (
+                    <>
+                        <StyledSpacer />
+                        <VersionContainer>
+                            v{process.env.REACT_APP_VERSION}
+                        </VersionContainer>
+                    </>
+                )}
+            </StyledConfigure>
+        </HomeBackupArea>
     );
 };
 

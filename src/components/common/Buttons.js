@@ -10,12 +10,12 @@ import { toast } from 'react-toastify';
 import PropTypes from 'prop-types';
 
 const BaseButtonOrLinkCss = css`
-    font-size: 24px;
-    padding: 20px 0;
+    font-size: 20px;
+    padding: 10px 0;
     border-radius: 9px;
     transition: all 0.5s ease;
-    width: 100%;
-    margin-bottom: 20px;
+    width: 80%;
+    margin-bottom: 10px;
     cursor: ${props => (props.disabled ? 'not-allowed' : 'pointer')};
     :hover {
         background-position: right center;
@@ -24,8 +24,8 @@ const BaseButtonOrLinkCss = css`
         box-shadow: ${props => props.theme.buttons.primary.hoverShadow};
     }
     @media (max-width: 768px) {
-        font-size: 16px;
-        padding: 15px 0;
+        font-size: 15px;
+        padding: 10px 0;
     }
 `;
 const CashtabBaseButton = styled.button`

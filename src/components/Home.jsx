@@ -12,7 +12,12 @@ export const TxHistoryCtn = styled.div`
   flex-direction: column;
   gap: 12px;
   color: ${props => props.theme.contrast};
-  margin-top: 24px;
+`;
+
+export const HomeBackupArea = styled.div`
+  background: #071627 !important;
+  border: 1px solid #383f4b;
+  padding: 10px;
 `;
 
 export default function Home({ setPage }) {
@@ -30,7 +35,7 @@ export default function Home({ setPage }) {
   const hasHistory = parsedTxHistory && parsedTxHistory.length > 0;
   const userLocale = getUserLocale(navigator);
   return (
-    <>
+    <HomeBackupArea className="pb-0">
       <TxHistoryCtn>
         <TxHistory
           txs={Array.isArray(txHistories) ? txHistories : []}
@@ -53,6 +58,6 @@ export default function Home({ setPage }) {
         )
         }
       </TxHistoryCtn>
-    </>
+    </HomeBackupArea>
   )
 }

@@ -12,7 +12,7 @@ export const CustomQRCode = styled(QRCodeSVG)`
  cursor: pointer;
     border-radius: 10px;
     background: ${props => props.theme.qr.background};
-    margin: 12px;
+    margin: 0 5px;
     path:first-child {
         fill: ${props => props.theme.qr.background};
     }
@@ -64,7 +64,6 @@ const ReceiveAddressHolder = styled.div`
     color: ${props => props.theme.lightWhite};
     text-align: center;
     cursor: pointer;
-    margin-bottom: 10px;
     padding: 0;
     font-family: 'Roboto Mono', monospace;
     border-radius: 5px;

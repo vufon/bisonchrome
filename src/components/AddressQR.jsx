@@ -12,9 +12,6 @@ export const ReceiveCtn = styled.div`
         margin: 0 0 20px;
         margin-top: 10px;
     }
-    ${QrCodeCtn} {
-        padding-top: 12px;
-    }
 `;
 
 export default function AddressQR() {

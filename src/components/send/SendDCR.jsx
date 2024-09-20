@@ -18,6 +18,8 @@ import { EstimateFee, fiatToSatoshis, getMaxSendAmountSatoshis, getMultisendTarg
 import { supportedFiatCurrencies } from '../../config/cashtabSettings';
 import { broadcastTx, getExplorerURL } from '../../explib';
 import { toast } from 'react-toastify';
+import { HomeBackupArea } from '../Home';
+import { WalletButtonRow } from '../wallets/styles';
 
 const SendXecForm = styled.div`
     margin: 12px 0;
@@ -472,92 +474,96 @@ const SendDCR = ({ addressInput = '' }) => {
           showCancelButton
         />
       )}
-      <SwitchContainer>
-        <Switch
-          name="Toggle Multisend"
-          on="Send to many"
-          off="Send to one"
-          width={150}
-          right={115}
-          checked={isOneToManyXECSend}
-          handleToggle={() =>
-            setIsOneToManyXECSend(!isOneToManyXECSend)
-          }
-        />
-      </SwitchContainer>
-      <InputModesHolder open={isOneToManyXECSend}>
-        <SendToOneHolder>
-          <SendToOneInputForm>
-            <InputAndAliasPreviewHolder>
-              <InputWithScanner
-                placeholder={`Address`}
-                name="address"
-                value={formData.address}
-                handleInput={handleAddressChange}
-                error={sendAddressError}
-                loadWithScannerOpen={false}
-              />
-            </InputAndAliasPreviewHolder>
-            <SendXecInput
-              name="amount"
-              value={formData.amount}
-              selectValue={selectedCurrency}
-              fiatCode="USD"
-              error={sendAmountError}
-              handleInput={handleAmountChange}
-              handleSelect={handleSelectedCurrencyChange}
-              handleOnMax={onMax}
-            />
-          </SendToOneInputForm>
-        </SendToOneHolder>
-        <SendToManyHolder>
-          <TextArea
-            placeholder={`One address & amount per line, separated by comma \ne.g. \necash:qpatql05s9jfavnu0tv6lkjjk25n6tmj9gkpyrlwu8,500 \necash:qzvydd4n3lm3xv62cx078nu9rg0e3srmqq0knykfed,700`}
-            name="multiAddressInput"
-            handleInput={e => handleMultiAddressChange(e)}
-            value={formData.multiAddressInput}
-            error={multiSendAddressError}
+      <HomeBackupArea>
+        <SwitchContainer>
+          <Switch
+            name="Toggle Multisend"
+            on="Send to many"
+            off="Send to one"
+            width={150}
+            right={115}
+            checked={isOneToManyXECSend}
+            handleToggle={() =>
+              setIsOneToManyXECSend(!isOneToManyXECSend)
+            }
           />
-        </SendToManyHolder>
-      </InputModesHolder>
-      <AmountPreviewCtn>
-        {feeEstimate ? (
-          <ConvertAmount>Fee (Estimate): {(selectedCurrency === appConfig.ticker ? toDCR(feeEstimate) : (toDCR(feeEstimate) * fiatPrice).toLocaleString(userLocale, {
-            minimumFractionDigits: appConfig.cashDecimals,
-            maximumFractionDigits: appConfig.cashDecimals,
-          })) + ' ' + selectedCurrency}</ConvertAmount>
-        ) : (<></>)}
-        {isOneToManyXECSend ? (
-          <LocaleFormattedValue>
-            {formatBalance(multiSendTotal, userLocale) +
-              ' ' +
-              selectedCurrency}
-          </LocaleFormattedValue>
-        ) : (
-          <LocaleFormattedValue>
-            {!isNaN(formData.amount)
-              ? formatBalance(
-                formData.amount,
-                userLocale,
-              ) +
-              ' ' +
-              selectedCurrency
-              : ''}
-          </LocaleFormattedValue>
-        )}
-        <ConvertAmount>
-          {fiatPriceString !== '' && '='} {fiatPriceString}
-        </ConvertAmount>
-      </AmountPreviewCtn>
-      <PrimaryButton
-        style={{ marginTop: '12px' }}
-        disabled={disableSendButton}
-        onClick={() => {
-          checkForConfirmationBeforeSendXec();
-        }}
-      >
-        Send
-      </PrimaryButton>
+        </SwitchContainer>
+        <InputModesHolder open={isOneToManyXECSend}>
+          <SendToOneHolder>
+            <SendToOneInputForm>
+              <InputAndAliasPreviewHolder>
+                <InputWithScanner
+                  placeholder={`Address`}
+                  name="address"
+                  value={formData.address}
+                  handleInput={handleAddressChange}
+                  error={sendAddressError}
+                  loadWithScannerOpen={false}
+                />
+              </InputAndAliasPreviewHolder>
+              <SendXecInput
+                name="amount"
+                value={formData.amount}
+                selectValue={selectedCurrency}
+                fiatCode="USD"
+                error={sendAmountError}
+                handleInput={handleAmountChange}
+                handleSelect={handleSelectedCurrencyChange}
+                handleOnMax={onMax}
+              />
+            </SendToOneInputForm>
+          </SendToOneHolder>
+          <SendToManyHolder>
+            <TextArea
+              placeholder={`One address & amount per line, separated by comma \ne.g. \necash:qpatql05s9jfavnu0tv6lkjjk25n6tmj9gkpyrlwu8,500 \necash:qzvydd4n3lm3xv62cx078nu9rg0e3srmqq0knykfed,700`}
+              name="multiAddressInput"
+              handleInput={e => handleMultiAddressChange(e)}
+              value={formData.multiAddressInput}
+              error={multiSendAddressError}
+            />
+          </SendToManyHolder>
+        </InputModesHolder>
+        <AmountPreviewCtn>
+          {feeEstimate ? (
+            <ConvertAmount>Fee (Estimate): {(selectedCurrency === appConfig.ticker ? toDCR(feeEstimate) : (toDCR(feeEstimate) * fiatPrice).toLocaleString(userLocale, {
+              minimumFractionDigits: appConfig.cashDecimals,
+              maximumFractionDigits: appConfig.cashDecimals,
+            })) + ' ' + selectedCurrency}</ConvertAmount>
+          ) : (<></>)}
+          {isOneToManyXECSend ? (
+            <LocaleFormattedValue>
+              {formatBalance(multiSendTotal, userLocale) +
+                ' ' +
+                selectedCurrency}
+            </LocaleFormattedValue>
+          ) : (
+            <LocaleFormattedValue>
+              {!isNaN(formData.amount)
+                ? formatBalance(
+                  formData.amount,
+                  userLocale,
+                ) +
+                ' ' +
+                selectedCurrency
+                : ''}
+            </LocaleFormattedValue>
+          )}
+          <ConvertAmount>
+            {fiatPriceString !== '' && '='} {fiatPriceString}
+          </ConvertAmount>
+        </AmountPreviewCtn>
+        <WalletButtonRow>
+          <PrimaryButton
+            style={{ marginTop: '12px' }}
+            disabled={disableSendButton}
+            onClick={() => {
+              checkForConfirmationBeforeSendXec();
+            }}
+          >
+            Send
+          </PrimaryButton>
+        </WalletButtonRow>
+      </HomeBackupArea>
     </>
   );
 }
