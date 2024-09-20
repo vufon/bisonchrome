@@ -110,7 +110,7 @@ export default function BalanceArea({
           ].slug.toUpperCase()}</p>
         <p className="flex-center exchange-text my-1">1 {appConfig.ticker} = {formattedExchangeRate}{' '}{settings.fiatCurrency.toUpperCase()}</p>
       </>) : (<>
-        <p className="flex-center my-1">{wallet.syncPercent <= 40 ? 'Initializing address list... ' : 'Fetching data from API... '}{wallet.syncPercent ? wallet.syncPercent : 0}%</p>
+        <p className="flex-center my-1">{wallet.syncPercent <= 40 ? 'Initializing address list... ' : 'Fetching data from API... '}{wallet.syncPercent ? wallet.syncPercent.toFixed(2) : 0}%</p>
         <div id="progressbar">
           <div id="currentProgress" style={{width: (wallet.syncPercent ? wallet.syncPercent : 0) + '%'}}></div>
         </div>

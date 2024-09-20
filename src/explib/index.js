@@ -2,12 +2,12 @@ import appConfig from "../config/app";
 import { httpGet } from "../http";
 import { NetWorkName, NetWorkType } from "../utils/const";
 
-export const TESTNET_EXPLORER_API = 'https://testnet.blockcare.pro/api'
-export const MAINET_EXPLORER_API = 'https://blockcare.pro/api'
-export const TESTNET_BROADCAST_API = 'https://testnet.blockcare.pro/api'
-export const MAINET_BROADCAST_API = 'https://blockcare.pro/api'
-export const TESTNET_EXPLORER_URL = 'https://testnet.blockcare.pro'
-export const MAINET_EXPLORER_URL = 'https://blockcare.pro'
+export const TESTNET_EXPLORER_API = 'https://testnet.bisonexplorer.com/api'
+export const MAINET_EXPLORER_API = 'https://bisonexplorer.com/api'
+export const TESTNET_BROADCAST_API = 'https://testnet.bisonexplorer.com/api'
+export const MAINET_BROADCAST_API = 'https://bisonexplorer.com/api'
+export const TESTNET_EXPLORER_URL = 'https://testnet.bisonexplorer.com'
+export const MAINET_EXPLORER_URL = 'https://bisonexplorer.com'
 
 export const getWalletData = async (wallet) => {
     const walletData = {

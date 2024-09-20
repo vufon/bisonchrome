@@ -254,9 +254,9 @@ export const syncDecredWalletData = async (activeWallet, wallets, updateDecredSt
             const bip39Seed = bip39.mnemonicToSeedSync(mnemonics);
             bip39SeedBuf = Buffer.from(bip39Seed, "hex")
         }
-        for (let account = 0; account < 10; account++) {
-            for (let change = 0; change <= 1; change++) {
-                for (let index = 0; index < 200; index++) {
+        for (let account = 0; account < 20; account++) {
+            for (let change = 0; change <= 5; change++) {
+                for (let index = 0; index < 400; index++) {
                     const derivationPath = `m/44'/${DerivationPath()}'/${account}'/${change}/${index}`;
                     let child
                     if (seedType == 17 || seedType == 33) {
@@ -274,8 +274,8 @@ export const syncDecredWalletData = async (activeWallet, wallets, updateDecredSt
                         wif: child.privateKey.toWIF(),
                     })
                 }
-                const changeIndex = account * 2 + change + 1
-                const addPercent = 40 * changeIndex / 20
+                const changeIndex = account * 6 + change + 1
+                const addPercent = 40 * changeIndex / 120
                 activeWallet.syncPercent = addPercent
                 await updateDecredState('wallets', [
                     activeWallet,
