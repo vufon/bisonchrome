@@ -178,9 +178,6 @@ function App() {
                   {page === 'backup' &&
                     <BackupWallet />
                   }
-                  {page === 'contacts' &&
-                    <Contacts setSendPage={setSendPage} />
-                  }
                   {page === 'configure' &&
                     <Configure />
                   }
@@ -239,14 +236,6 @@ function App() {
               {' '}
               <p className={page === 'backup' ? 'nav-active' : ''}>Wallet Backup</p>
               <WalletIcon />
-            </NavItem>
-            <NavItem
-              active={page === 'contacts'}
-              onClick={() => setPage('contacts')}
-            >
-              {' '}
-              <p className={page === 'contacts' ? 'nav-active' : ''}>Contacts</p>
-              <ContactsIcon />
             </NavItem>
             <NavItem
               active={

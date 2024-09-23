@@ -6,7 +6,6 @@ import React, { useState } from 'react';
 import {
     TrashcanIcon,
     EditIcon,
-    AddContactIcon,
     SyncIcon,
 } from '../common/CustomIcons';
 import PrimaryButton, {
@@ -37,11 +36,10 @@ import { toFormattedXec } from '../../utils/formatting';
 import { getUserLocale } from '../../utils/helpers';
 import Modal from '../../components/common/Modal';
 import { getWalletNameError, getWordSeedTypeFromMnemonic, validateMnemonic } from '../../validation';
-import { CurrencyDropdown, CurrencyOption, CurrencySelect, ModalInput } from '../../components/common/Inputs';
+import { CurrencyOption, ModalInput } from '../../components/common/Inputs';
 import debounce from 'lodash.debounce';
 import { DerivationPath } from '../../utils/const';
 import * as Decred from 'decredjs-lib'
-import appConfig from '../../config/app';
 import { HomeBackupArea } from '../Home';
 
 //TODO: 
@@ -63,7 +61,7 @@ export const generateBip39Mnemonic = (seedType) => {
 const Wallets = () => {
     const ContextValue = React.useContext(WalletContext);
     const { updateDecredState, decredState } = ContextValue;
-    const { wallets, contactList } = decredState;
+    const { wallets } = decredState;
     const emptyFormDataErrors = {
         renamedWalletName: false,
         walletToBeDeletedName: false,
@@ -253,31 +251,6 @@ const Wallets = () => {
         ]);
     }
 
-    const addWalletToContacts = async wallet => {
-        const addressToAdd = wallet.paths[DerivationPath()].address;
-        // Check to see if the contact exists
-        const contactExists = contactList.find(
-            contact => contact.address === addressToAdd,
-        );
-
-        if (typeof contactExists !== 'undefined') {
-            // Contact exists
-            // Not expected to ever happen from Tx.js as user should not see option to
-            // add an existing contact
-            toast.error(`${addressToAdd} already exists in Contacts`);
-        } else {
-            contactList.push({
-                name: wallet.name,
-                address: addressToAdd,
-            });
-            // update localforage and state
-            await updateDecredState('contactList', contactList);
-            toast.success(
-                `${wallet.name} (${addressToAdd}) added to Contact List`,
-            );
-        }
-    };
-
     const activateWallet = (walletToActivate, wallets) => {
         // Get desired wallets array after activating walletToActivate
         const walletsAfterActivation = getWalletsForNewActiveWallet(
@@ -411,13 +384,6 @@ const Wallets = () => {
                                             }
                                         />
                                         <IconButton
-                                            name={`Add ${wallet.name} to contacts`}
-                                            icon={<AddContactIcon />}
-                                            onClick={() =>
-                                                addWalletToContacts(wallet)
-                                            }
-                                        />
-                                        <IconButton
                                             name={`Sync ${wallet.name} wallet data`}
                                             icon={<SyncIcon />}
                                             onClick={() =>
@@ -456,13 +422,6 @@ const Wallets = () => {
                                                     icon={<EditIcon />}
                                                     onClick={() =>
                                                         setWalletToBeRenamed(wallet)
-                                                    }
-                                                />
-                                                <IconButton
-                                                    name={`Add Account2 to contacts`}
-                                                    icon={<AddContactIcon />}
-                                                    onClick={() =>
-                                                        addWalletToContacts(wallet)
                                                     }
                                                 />
                                                 <IconButton

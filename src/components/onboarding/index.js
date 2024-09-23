@@ -106,7 +106,7 @@ const OnBoarding = () => {
             )}
 
             <WelcomeCtn>
-                <h2>Welcome to Decred!</h2>
+                <h2>Welcome to Bison Chrome!</h2>
                 <WelcomeText>
                     Decred is an{' '}
                     <WelcomeLink

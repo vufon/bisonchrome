@@ -49,6 +49,13 @@ export const toDCR = satoshis => {
     return new BN(satoshis).div(SATOSHIS_PER_XEC).toNumber();
 };
 
+export const divDecimals = (int, div) => {
+    if (!Number.isInteger(int)) {
+        throw new Error('Input param satoshis must be an integer');
+    }
+    return new BN(int).div(div).toNumber();
+};
+
 export const createDecredWallet = async (mnemonicWords, isImport, seedType) => {
     // Initialize wallet with empty state
     const wallet = {

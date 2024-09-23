@@ -233,31 +233,6 @@ const Configure = () => {
                         </UpdateButtonRow>
                     </>
                 ) : (<></>)}
-                <StyledSpacer />
-                <SocialContainer>
-                    <SocialLink
-                        href="https://x.com/decredproject"
-                        target="_blank"
-                        rel="noreferrer"
-                    >
-                        <ThemedXIcon />
-                    </SocialLink>{' '}
-                    <SocialLink
-                        href="https://www.facebook.com/decredproject"
-                        target="_blank"
-                        rel="noreferrer"
-                    >
-                        <ThemedFacebookIcon />
-                    </SocialLink>
-                    <SocialLink
-                        href="https://github.com/decred"
-                        target="_blank"
-                        rel="noreferrer"
-                    >
-                        <GithubIcon />
-                    </SocialLink>
-                </SocialContainer>
-
                 {typeof process.env.REACT_APP_VERSION === 'string' && (
                     <>
                         <StyledSpacer />

@@ -248,6 +248,34 @@ label.urlLabel {
     font-size: 18px;
 }
 
+.fs-14 {
+    font-size: 14px;
+}
+
+.fs-16 {
+    font-size: 16px;
+}
+
+.fs-17 {
+    font-size: 17px;
+}
+
+.ai-center {
+    align-items: center;
+}
+
+.ai-end {
+    align-items: end;
+}
+
+.pb-3px {
+    padding-bottom: 3px;
+}
+
+.pb-5px {
+    padding-bottom: 5px;
+}
+
 .text-underline {
     text-decoration: underline;
 }

@@ -3,6 +3,7 @@ import { toDCR, toSatoshis } from '../wallet/index';
 import appConfig from '../config/app';
 import { toFormattedXec } from '../utils/formatting';
 import { getWalletsForNewActiveWallet } from '../wallet/index'
+import { BN } from 'slp-mdm';
 import {
   CashtabSettings,
   supportedFiatCurrencies,
@@ -26,16 +27,33 @@ export default function BalanceArea({
   const renderFiatValues = typeof fiatPrice === 'number';
   let balanceDCR,
     formattedBalanceDCR,
+    afterDecimalDisplay,
     formattedBalanceFiat,
     formattedExchangeRate;
   if (renderBalanceHeader) {
     // Display XEC balance formatted for user's browser locale
     balanceDCR = toDCR(balanceSats);
-
-    formattedBalanceDCR = balanceDCR.toLocaleString(userLocale, {
+    const balanceFloor = Math.floor(balanceSats / 1e6)
+    console.log('check balanceFloor: ' + balanceFloor)
+    formattedBalanceDCR = new BN(balanceFloor).div(1e2).toNumber()
+    const afterNumber = balanceDCR - formattedBalanceDCR
+    const afterStr = afterNumber.toLocaleString(userLocale, {
       minimumFractionDigits: appConfig.cashDecimals,
       maximumFractionDigits: appConfig.cashDecimals,
     });
+    const numArr = afterStr.split(afterStr.includes(',') ? ',' : '.')
+    afterDecimalDisplay = ''
+    if (numArr.length >= 2) {
+      const afterDecimal = numArr[1]
+      if (afterDecimal.length > 2) {
+        afterDecimalDisplay = afterDecimal.substring(2)
+      }
+    }
+    console.log('after display: ' + afterDecimalDisplay)
+    // toLocaleString(userLocale, {
+    //   minimumFractionDigits: appConfig.cashDecimals,
+    //   maximumFractionDigits: appConfig.cashDecimals,
+    // });
 
     if (renderFiatValues) {
       // Display fiat balance formatted for user's browser locale
@@ -103,7 +121,7 @@ export default function BalanceArea({
         }} />
       </div>
       {wallet.syncWallet ? (<>
-        <h3 className="flex-center cardTitle mt-3"> {formattedBalanceDCR} {appConfig.ticker}</h3>
+        <h3 className="flex-center cardTitle ai-end mt-3"> {formattedBalanceDCR}<span className="fs-17 pb-3px me-1">{afterDecimalDisplay}</span> {appConfig.ticker}</h3>
         <p className="flex-center my-1">{supportedFiatCurrencies[settings.fiatCurrency].symbol}{formattedBalanceFiat}&nbsp;
           {supportedFiatCurrencies[
             settings.fiatCurrency
@@ -112,7 +130,7 @@ export default function BalanceArea({
       </>) : (<>
         <p className="flex-center my-1">{wallet.syncPercent <= 40 ? 'Initializing address list... ' : 'Fetching data from API... '}{wallet.syncPercent ? wallet.syncPercent.toFixed(2) : 0}%</p>
         <div id="progressbar">
-          <div id="currentProgress" style={{width: (wallet.syncPercent ? wallet.syncPercent : 0) + '%'}}></div>
+          <div id="currentProgress" style={{ width: (wallet.syncPercent ? wallet.syncPercent : 0) + '%' }}></div>
         </div>
       </>)}
     </div>
