@@ -263,7 +263,7 @@ export const syncDecredWalletData = async (activeWallet, wallets, updateDecredSt
         }
         for (let account = 0; account < 20; account++) {
             for (let change = 0; change <= 5; change++) {
-                for (let index = 0; index < 400; index++) {
+                for (let index = 0; index < 300; index++) {
                     const derivationPath = `m/44'/${DerivationPath()}'/${account}'/${change}/${index}`;
                     let child
                     if (seedType == 17 || seedType == 33) {
@@ -314,6 +314,75 @@ export const syncDecredWalletData = async (activeWallet, wallets, updateDecredSt
         }
         activeWallet.state = newState
     }
+}
+
+export const createNewWalletAddress = async (wallet, wallets, updateDecredState) => {
+    const mnemonics = wallet.mnemonic
+    if (!mnemonics) {
+        return
+    }
+    let mnemonicObj
+    let bip39SeedBuf
+    const seedType = wallet.seedType
+    if (seedType == 17 || seedType == 33) {
+        mnemonicObj = Decred.Mnemonic(mnemonics)
+    } else {
+        const bip39Seed = bip39.mnemonicToSeedSync(mnemonics);
+        bip39SeedBuf = Buffer.from(bip39Seed, "hex")
+    }
+    let completeCreated = false
+    let index = 1
+    while (!completeCreated) {
+        if (index > 1000) {
+            break
+        }
+        const derivationPath = `m/44'/${DerivationPath()}'/0'/0/${index}`;
+        let child
+        if (seedType == 17 || seedType == 33) {
+            child = mnemonicObj.toHDPrivateKey(getNetworkName()).derive(derivationPath)
+        } else {
+            child = toHDPrivateKey(getNetworkName(), bip39SeedBuf).derive(derivationPath);
+        }
+        const newAddress = child.publicKey.toAddress().toString()
+        //check exist on active addresses
+        let exist = false
+        wallet.state.activeAddresses.forEach((activeAddr) => {
+            if (newAddress === activeAddr.address) {
+                exist = true
+                return
+            }
+        })
+        if (!exist) {
+            wallet.state.activeAddresses.push({
+                address: child.publicKey.toAddress().toString(),
+                privateKey: child.privateKey.toString(),
+                publicKey: child.publicKey.toString(),
+                accountIndex: 0,
+                changeIndex: 0,
+                addressIndex: index,
+                wif: child.privateKey.toWIF(),
+            })
+            const pathInfo = {
+                address: child.publicKey.toAddress().toString(),
+                privateKey: child.privateKey.toString(),
+                publicKey: child.publicKey.toString(),
+                wif: child.privateKey.toWIF(),
+            }
+            wallet.name = pathInfo.address.slice(0, 6);
+            const pathMap = {};
+            pathMap[DerivationPath()] = pathInfo
+            wallet.paths = pathMap;
+            await updateDecredState('wallets', [
+                wallet,
+                ...wallets.slice(1),
+            ]);
+            completeCreated = true
+            break
+        } else {
+            index++ 
+        }
+    }
+    return completeCreated
 }
 
 /**

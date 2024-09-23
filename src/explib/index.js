@@ -1,6 +1,6 @@
 import appConfig from "../config/app";
 import { httpGet } from "../http";
-import { NetWorkName, NetWorkType } from "../utils/const";
+import { DerivationPath, NetWorkName, NetWorkType } from "../utils/const";
 
 export const TESTNET_EXPLORER_API = 'https://testnet.bisonexplorer.com/api'
 export const MAINET_EXPLORER_API = 'https://bisonexplorer.com/api'
@@ -80,6 +80,9 @@ export const getAddressesTxHistories = async (isSync, addresses, activeWallet, w
         utxos: utxos,
         balance: 0
     }
+    if (activeWallet.state.activeAddresses && activeWallet.state.activeAddresses.length > 0) {
+        resData.activeAddresses.push(...activeWallet.state.activeAddresses)
+    }
     for (let keyIndex = 0; keyIndex < addrKeys.length; keyIndex++) {
         const addrKey = addrKeys[keyIndex]
         const txsAddressObj = addressesTxsMap[addrKey]
@@ -87,7 +90,17 @@ export const getAddressesTxHistories = async (isSync, addresses, activeWallet, w
             const inputs = []
             const outputTxs = []
             pushTxToList(txsAddressObj, resData.txList)
-            resData.activeAddresses.push(addressObjsMap.get(addrKey))
+            //if addrKey not exist on active address, insert
+            let isExist = false
+            resData.activeAddresses.forEach((activeAddr) => {
+                if (activeAddr.address === addrKey) {
+                    isExist = true
+                    return
+                }
+            })
+            if (!isExist) {
+                resData.activeAddresses.push(addressObjsMap.get(addrKey))
+            }
             //define utxos, stxos
             txsAddressObj.forEach(txs => {
                 const txid = txs.txid
@@ -141,6 +154,24 @@ export const getAddressesTxHistories = async (isSync, addresses, activeWallet, w
     resData.balance = balance
     if (resData.txList && resData.txList.length > 1) {
         resData.txList.sort((a, b) => (a.time > b.time) ? -1 : ((a.time < b.time) ? 1 : 0))
+    }
+    //check main address exist on active addresses?
+    let mainExist = false
+    const mainAddr = activeWallet.paths[DerivationPath()].address
+    resData.activeAddresses.forEach((activeAddr) => {
+        if (activeAddr.address === mainAddr) {
+            mainExist = true
+            return
+        }
+    })
+    if (!mainExist) {
+        const pathInfo = activeWallet.paths[DerivationPath()]
+        resData.activeAddresses.push({
+            address: pathInfo.address,
+            privateKey: pathInfo.privateKey,
+            publicKey: pathInfo.publicKey,
+            wif: pathInfo.wif,
+        })
     }
     return resData
 }
