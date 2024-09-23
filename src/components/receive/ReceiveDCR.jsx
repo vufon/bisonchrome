@@ -2,6 +2,7 @@ import { createNewWalletAddress } from "../../wallet";
 import { WalletContext } from "../../wallet/context";
 import AddressQR from "../AddressQR";
 import PrimaryButton from "../common/Buttons";
+import { StyledSpacer } from "../configure/Configure";
 import { HomeBackupArea } from "../Home";
 import { WalletButtonRow } from "../wallets/styles";
 import React, { useState } from 'react';
@@ -23,6 +24,7 @@ export default function ReceiveDCR() {
   return (
     <HomeBackupArea>
       <AddressQR />
+      <StyledSpacer />
       <WalletButtonRow>
         <PrimaryButton onClick={() => createNewAddress()}>
           New Address

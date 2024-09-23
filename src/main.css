@@ -333,3 +333,11 @@ code {
 .nav-active {
     color: #00ABE7;
 }
+
+.sync-button {
+    box-shadow: none;
+}
+
+.sync-button:hover {
+    border-radius: 50px;
+}

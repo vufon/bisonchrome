@@ -5,7 +5,6 @@ import './static/js/bootstrap/bootstrap.bundle.min.js';
 import Home from "./components/Home";
 import SendDCR from "./components/send/SendDCR.jsx";
 import ReceiveDCR from "./components/receive/ReceiveDCR.jsx";
-import Wallets from "./components/wallets/index.js"
 import OnBoarding from './components/onboarding/index.js';
 import styled, { css, ThemeProvider } from 'styled-components';
 import { theme } from './static/js/styles/theme.js';
@@ -107,7 +106,6 @@ function App() {
   const { updateDecredState, decredState, cashtabLoaded, loading, fiatPrice } = ContextValue;
   const { wallets, settings, } = decredState;
   const wallet = wallets.length > 0 ? wallets[0] : false;
-  const walletState = getWalletState(wallet);
   const [page, setPage] = useState('home')
   const [sendAddress, setSendAddress] = useState('');
   const [navMenuClicked, setNavMenuClicked] = useState(false);
@@ -172,9 +170,6 @@ function App() {
                   {page === 'receive' &&
                     <ReceiveDCR />
                   }
-                  {page === 'wallets' &&
-                    <Wallets />
-                  }
                   {page === 'backup' &&
                     <BackupWallet />
                   }
@@ -214,40 +209,19 @@ function App() {
           <ReceiveIcon />
         </NavButton>
         <NavButton
-          aria-label="Wallets"
-          active={page === 'wallets'}
-          onClick={() => setPage('wallets')}
+          aria-label="Wallet Backup"
+          active={page === 'backup'}
+          onClick={() => setPage('backup')}
         >
-          <BankIcon />
+          <WalletIcon />
         </NavButton>
-        <NavWrapper
-          title="Show Other Screens"
-          onClick={handleNavMenuClick}
+        <NavButton
+          aria-label="Settings"
+          active={page === 'configure'}
+          onClick={() => setPage('configure')}
         >
-          <NavIcon clicked={navMenuClicked} />
-          <NavMenu
-            title="Other Screens"
-            open={navMenuClicked}
-          >
-            <NavItem
-              active={page === 'backup'}
-              onClick={() => setPage('backup')}
-            >
-              {' '}
-              <p className={page === 'backup' ? 'nav-active' : ''}>Wallet Backup</p>
-              <WalletIcon />
-            </NavItem>
-            <NavItem
-              active={
-                page === 'configure'
-              }
-              onClick={() => setPage('configure')}
-            >
-              <p className={page === 'configure' ? 'nav-active' : ''}>Settings</p>
-              <SettingsIcon />
-            </NavItem>
-          </NavMenu>
-        </NavWrapper>
+          <SettingsIcon />
+        </NavButton>
       </Footer>
     </ThemeProvider>
   );

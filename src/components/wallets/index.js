@@ -8,8 +8,7 @@ import {
     EditIcon,
     SyncIcon,
 } from '../common/CustomIcons';
-import PrimaryButton, {
-    SecondaryButton,
+import {
     IconButton,
     CopyIconButton,
 } from '../common/Buttons';
@@ -25,17 +24,16 @@ import {
     SvgButtonPanel,
     WalletBalance,
     ActivateButton,
-    WalletButtonRow,
 } from './styles';
 import * as bip39 from 'bip39';
 import * as randomBytes from 'randombytes';
-import { createDecredWallet, getWalletsForNewActiveWallet, syncDecredWalletData } from '../../wallet/index'
+import { getWalletsForNewActiveWallet, syncDecredWalletData } from '../../wallet/index'
 import { WalletContext } from '../../wallet/context';
 import { toast } from 'react-toastify';
 import { toFormattedXec } from '../../utils/formatting';
 import { getUserLocale } from '../../utils/helpers';
 import Modal from '../../components/common/Modal';
-import { getWalletNameError, getWordSeedTypeFromMnemonic, validateMnemonic } from '../../validation';
+import { getWalletNameError, validateMnemonic } from '../../validation';
 import { CurrencyOption, ModalInput } from '../../components/common/Inputs';
 import debounce from 'lodash.debounce';
 import { DerivationPath } from '../../utils/const';
@@ -77,7 +75,6 @@ const Wallets = () => {
     const [formData, setFormData] = useState(emptyFormData);
     const [formDataErrors, setFormDataErrors] = useState(emptyFormDataErrors);
     const [walletToBeDeleted, setWalletToBeDeleted] = useState(null);
-    const [showImportWalletModal, setShowImportWalletModal] = useState(false);
     const [walletToBeRenamed, setWalletToBeRenamed] = useState(null);
     const userLocale = getUserLocale(navigator);
 
@@ -114,82 +111,6 @@ const Wallets = () => {
             [name]: value,
         }));
     };
-
-    async function createNewWordSeedWallet() {
-        const mnemonicWords = generateMnemonic(12)
-        //check word seed type
-        const newWallet = await createDecredWallet(mnemonicWords, false, 12)
-        const walletAlreadyInWalletsSomehow = wallets.find(
-            wallet =>
-                wallet.name === newWallet.name ||
-                wallet.mnemonic === newWallet.mnemonic,
-        );
-        if (typeof walletAlreadyInWalletsSomehow !== 'undefined') {
-            toast.error(
-                `By a vanishingly small chance, "${newAddedWallet.name}" already existed in saved wallets. Please try again.`,
-            );
-            // Do not add this wallet
-            return;
-        }
-        updateDecredState('wallets', [...wallets, newWallet]);
-        toast.success(`New wallet "${newWallet.name}" added to wallets`);
-    }
-
-    async function importNewWallet() {
-        // Make sure no existing wallets have this mnemonic
-        const walletInWallets = wallets.find(
-            wallet => wallet.mnemonic === formData.mnemonic,
-        );
-
-        if (typeof walletInWallets !== 'undefined') {
-            // Import error modal
-            console.error(
-                `Cannot import: wallet already exists (name: "${walletInWallets.name}")`,
-            );
-            toast.error(
-                `Cannot import: wallet already exists (name: "${walletInWallets.name}")`,
-            );
-            // Do not clear form data in this case
-            return;
-        }
-        const wordsSize = getWordSeedTypeFromMnemonic(formData.mnemonic)
-        // Create a new wallet from mnemonic
-        const newImportedWallet = await createDecredWallet(formData.mnemonic, true, wordsSize);
-
-        // Handle edge case of another wallet having the same name
-        const existingWalletHasSameName = wallets.find(
-            wallet => wallet.name === newImportedWallet.name,
-        );
-        if (typeof existingWalletHasSameName !== 'undefined') {
-            // Import error modal for wallet existing with the same name
-            console.error(
-                `Cannot import: wallet with same name already exists (name: "${existingWalletHasSameName.name}")`,
-            );
-            toast.error(
-                `Cannot import: wallet with same name already exists (name: "${existingWalletHasSameName.name}")`,
-            );
-            // Do not clear form data in this case
-            return;
-        }
-
-        // Event("Category", "Action", "Label")
-        // Track number of times a different wallet is activated
-        //  Event('Configure.js', 'Create Wallet', 'Imported');
-
-        // Add it to the end of the wallets object
-        updateDecredState('wallets', [...wallets, newImportedWallet]);
-
-        // Import success modal
-        toast.success(
-            `New imported wallet "${newImportedWallet.name}" added to your saved wallets`,
-        );
-
-        // Clear formdata
-        setFormData({ ...formData, mnemonic: '' });
-
-        // Close the modal
-        setShowImportWalletModal(false);
-    }
 
     const renameWallet = async () => {
         // Find the wallet you want to rename
@@ -317,28 +238,6 @@ const Wallets = () => {
                     />
                 </Modal>
             )}
-            {showImportWalletModal && (
-                <Modal
-                    height={210}
-                    title={`Import wallet`}
-                    handleOk={importNewWallet}
-                    handleCancel={() => setShowImportWalletModal(false)}
-                    showCancelButton
-                    disabled={
-                        formDataErrors.mnemonic !== false ||
-                        formData.mnemonic === ''
-                    }
-                >
-                    <ModalInput
-                        type="email"
-                        placeholder="mnemonic (seed phrase)"
-                        name="mnemonic"
-                        value={formData.mnemonic}
-                        error={formDataErrors.mnemonic}
-                        handleInput={handleInput}
-                    />
-                </Modal>
-            )}
             {walletToBeDeleted !== null && (
                 <Modal
                     height={210}
@@ -451,16 +350,6 @@ const Wallets = () => {
                             ),
                         )}
                     </WalletsPanel>
-                    <WalletButtonRow>
-                        <PrimaryButton onClick={() => createNewWordSeedWallet()}>
-                            New Wallet
-                        </PrimaryButton>
-                    </WalletButtonRow>
-                    <WalletButtonRow>
-                        <SecondaryButton onClick={() => setShowImportWalletModal(true)}>
-                            Import Wallet
-                        </SecondaryButton>
-                    </WalletButtonRow>
                 </WalletsList>
             </HomeBackupArea>
         </>

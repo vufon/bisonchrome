@@ -50,7 +50,6 @@ const OnBoarding = () => {
         //check word seed type
         const newWallet = await createDecredWallet(mnemonicWords, false, 12)
         updateDecredState('wallets', [...wallets, newWallet]);
-        setShowWordSeedTypeModal(false);
     }
     const seedTypeMenuOptions = [];
     seedTypeMenuOptions.push({

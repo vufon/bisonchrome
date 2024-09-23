@@ -56,7 +56,7 @@ const ToggleLabel = styled.div`
     color: ${props => props.theme.contrast};
 `;
 
-const StyledSpacer = styled.div`
+export const StyledSpacer = styled.div`
     height: 1px;
     width: 100%;
     background-color: ${props => props.theme.lightWhite};
