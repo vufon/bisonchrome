@@ -13,6 +13,7 @@ import { CurrencyDropdown, CurrencyOption, ModalInput } from '../common/Inputs';
 import { createDecredWallet } from '../../wallet';
 import { generateMnemonic } from '../wallets';
 import { WalletButtonRow } from '../wallets/styles';
+import { HomeBackupArea } from '../Home';
 
 const OnBoarding = () => {
     const ContextValue = React.useContext(WalletContext);
@@ -103,31 +104,32 @@ const OnBoarding = () => {
                     />
                 </Modal>
             )}
-
-            <WelcomeCtn>
-                <h2>Welcome to Bison Chrome!</h2>
-                <WelcomeText>
-                    Decred is an{' '}
-                    <WelcomeLink
-                        href="https://github.com/decred"
-                        target="_blank"
-                        rel="noreferrer"
-                    >
-                        open source,
-                    </WelcomeLink>{' '}
-                    non-custodial web wallet for {appConfig.name}.
-                </WelcomeText>
-                <WalletButtonRow>
-                    <PrimaryButton onClick={() => createNewWordSeedWallet()}>
-                        New Wallet
-                    </PrimaryButton>
-                </WalletButtonRow>
-                <WalletButtonRow>
-                    <SecondaryButton onClick={() => setShowImportWalletModal(true)}>
-                        Import Wallet
-                    </SecondaryButton>
-                </WalletButtonRow>
-            </WelcomeCtn>
+            <HomeBackupArea className="mt-4">
+                <WelcomeCtn>
+                    <h3>Welcome to Bison Chrome!</h3>
+                    <WelcomeText>
+                        Bison Chrome is an{' '}
+                        <WelcomeLink
+                            href="https://github.com/vufon/bisonchrome"
+                            target="_blank"
+                            rel="noreferrer"
+                        >
+                            open source,
+                        </WelcomeLink>{' '}
+                        non-custodial web wallet for {appConfig.name}.
+                    </WelcomeText>
+                    <WalletButtonRow>
+                        <PrimaryButton onClick={() => createNewWordSeedWallet()}>
+                            New Wallet
+                        </PrimaryButton>
+                    </WalletButtonRow>
+                    <WalletButtonRow>
+                        <SecondaryButton onClick={() => setShowImportWalletModal(true)}>
+                            Import Wallet
+                        </SecondaryButton>
+                    </WalletButtonRow>
+                </WelcomeCtn>
+            </HomeBackupArea>
         </>
     );
 };

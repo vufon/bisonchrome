@@ -5,6 +5,7 @@
     --primaryAccent: #cac4ce;
     --secondaryColor: #242038;
     --secondaryAccent: #cac4ce;
+    --thirdAccent: #3d92ca;
     --transitionDurationSlow: 150ms;
     --transitionDurationFast: 50ms;
 }
@@ -16,13 +17,17 @@
 
 .app {
     width: 500px;
-    min-height: calc(-80px + 100vh);
+    min-height: calc(100vh);
     background-color: var(--primaryColor);
     font-size: calc(10px + 2vmin);
     color: var(--primaryAccent);
-    padding: 10px;
-    padding-bottom: 90px;
+    padding: 10px 10px 0 10px;
     font-family: "Inter", sans-serif;
+}
+
+.normal-app {
+    padding-bottom: 90px;
+    min-height: calc(-80px + 100vh);
 }
 
 /* Utility classes */
@@ -94,8 +99,7 @@ button {
 }
 
 button:hover {
-    background-color: var(--secondaryAccent);
-    color: var(--primaryColor);
+    background-color: var(--thirdAccent);
     transition-duration: var(--transitionDurationSlow);
 }
 

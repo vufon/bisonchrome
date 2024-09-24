@@ -148,7 +148,8 @@ export const sumOneToManyDcr = destinationAddressAndValueArray => {
 };
 
 export const getMaxSendAmountSatoshis = (
-    wallet
+    wallet,
+    settings
 ) => {
     // xecUtxos are all spendable nonSlpUtxos in the wallet
     const dcrInputs = wallet.state.Utxos
@@ -157,7 +158,7 @@ export const getMaxSendAmountSatoshis = (
         (previousBalance, utxo) => previousBalance + utxo.atoms,
         0,
     );
-    const fee = EstimateFee(wallet, totalSatsInWallet)
+    const fee = EstimateFee(wallet, totalSatsInWallet, settings)
     if (typeof fee !== 'number' || fee >= totalSatsInWallet) {
         throw new Error(
             'Calculate fee failed',

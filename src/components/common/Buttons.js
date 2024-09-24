@@ -46,7 +46,7 @@ const PrimaryButtonOrLinkCss = css`
     ${props =>
         props.disabled
             ? `background: ${props.theme.buttons.disabled.background};`
-            : `background-image: ${props.theme.buttons.primary.backgroundImage}; `};
+            : `background: ${props.theme.buttons.primary.background}; `};
     background-size: 200% auto;
     svg {
         fill: ${props => props.theme.buttons.primary.color};
@@ -74,12 +74,15 @@ const SecondaryButtonOrLinkCss = css`
             ? props.theme.buttons.disabled.color
             : props.theme.buttons.primary.color};
     border: 1px solid
-        ${props => (props.disabled ? 'none' : props.theme.eCashPurple)};
+        ${props => (props.disabled ? 'none' : props.theme.bisonGrey)};
     ${props =>
         props.disabled
             ? `background: ${props.theme.buttons.disabled.background};`
-            : `background-image: ${props.theme.buttons.secondary.backgroundImage}; `};
+            : `background: ${props.theme.buttons.secondary.background}; `};
     background-size: 200% auto;
+    &:hover {
+        background-color: #3c3b3b !important;
+    }
     svg {
         fill: ${props => props.theme.buttons.secondary.color};
     }

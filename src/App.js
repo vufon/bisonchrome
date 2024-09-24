@@ -136,7 +136,7 @@ function App() {
         theme="light"
         transition={Bounce}
       />
-      <div className="app">
+      <div className={!wallet ? "app" : "app normal-app"}>
         <div className="container">
           <div class="top-banner d-flex justify-content-between">
             <div></div>
@@ -182,47 +182,48 @@ function App() {
           )}
         </div>
       </div>
-      <Footer>
-        <NavButton
-          aria-label="Home Screen"
-          active={
-            page === 'home'
-          }
-          onClick={() => setPage('home')}
-        >
-          <HomeIcon />
-        </NavButton>
+      {!wallet ? (<></>) : (<>
+        <Footer>
+          <NavButton
+            aria-label="Home Screen"
+            active={
+              page === 'home'
+            }
+            onClick={() => setPage('home')}
+          >
+            <HomeIcon />
+          </NavButton>
 
-        <NavButton
-          aria-label="Send Screen"
-          active={page === 'send'}
-          style={{ paddingBottom: '10px' }}
-          onClick={() => setPage('send')}
-        >
-          <SendIcon />
-        </NavButton>
-        <NavButton
-          aria-label="Receive Screen"
-          active={page === 'receive'}
-          onClick={() => setPage('receive')}
-        >
-          <ReceiveIcon />
-        </NavButton>
-        <NavButton
-          aria-label="Wallet Backup"
-          active={page === 'backup'}
-          onClick={() => setPage('backup')}
-        >
-          <WalletIcon />
-        </NavButton>
-        <NavButton
-          aria-label="Settings"
-          active={page === 'configure'}
-          onClick={() => setPage('configure')}
-        >
-          <SettingsIcon />
-        </NavButton>
-      </Footer>
+          <NavButton
+            aria-label="Send Screen"
+            active={page === 'send'}
+            style={{ paddingBottom: '10px' }}
+            onClick={() => setPage('send')}
+          >
+            <SendIcon />
+          </NavButton>
+          <NavButton
+            aria-label="Receive Screen"
+            active={page === 'receive'}
+            onClick={() => setPage('receive')}
+          >
+            <ReceiveIcon />
+          </NavButton>
+          <NavButton
+            aria-label="Wallet Backup"
+            active={page === 'backup'}
+            onClick={() => setPage('backup')}
+          >
+            <WalletIcon />
+          </NavButton>
+          <NavButton
+            aria-label="Settings"
+            active={page === 'configure'}
+            onClick={() => setPage('configure')}
+          >
+            <SettingsIcon />
+          </NavButton>
+        </Footer></>)}
     </ThemeProvider>
   );
 }

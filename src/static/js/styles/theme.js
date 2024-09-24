@@ -4,7 +4,8 @@
 
 export const theme = {
     eCashBlue: '#00ABE7',
-    eCashPurple: '#ff21d0',
+    eCashPurple: '#2daaf2',
+    bisonGrey: '#777',
     darkBlue: '#273498',
     contrast: '#fff',
     panel: '#06233f',
@@ -33,7 +34,7 @@ export const theme = {
         expandedBackground: 'rgba(0,0,0,0.2)',
     },
     forms: {
-        error: '#FF21D0',
+        error: '#e87c7c',
         border: '#17171f',
         text: '#fff',
         addonBackground: '#255173',
@@ -52,14 +53,12 @@ export const theme = {
     },
     buttons: {
         primary: {
-            backgroundImage:
-                'linear-gradient(270deg, #0074C2 0%, #273498 100%)',
+            background: '#0a4972',
             color: '#fff',
             hoverShadow: '0px 3px 10px -5px rgba(0, 0, 0, 0.75)',
         },
         secondary: {
-            backgroundImage:
-                'linear-gradient(270deg, #ff21d0 0%, #273498 100%)',
+            background:'hsl(0deg 0% 47% / 13.3%)',
             color: '#fff',
         },
         modal: {
@@ -67,7 +66,7 @@ export const theme = {
             background: '#ff21d080',
         },
         disabled: {
-            background: '#4b67e1',
+            background: '#3d92ca',
             color: 'rgba(255,255,255,0.4)',
         },
         styledLink: '#ffffff',

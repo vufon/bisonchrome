@@ -14,12 +14,13 @@ import {
 import Modal from '../common/Modal';
 import { isValidMultiSendUserInput, isValidXecSendAmount, parseAddressInput, shouldSendXecBeDisabled } from '../../validation';
 import { WalletContext } from '../../wallet/context';
-import { EstimateFee, fiatToSatoshis, getMaxSendAmountSatoshis, getMultisendTargetOutputs, getWalletState, SendAmount, SendToMutilAddress, sumOneToManyDcr, syncDecredWalletData, toDCR, toSatoshis } from '../../wallet';
+import { EstimateFee, fiatToSatoshis, getMaxSendAmountSatoshis, getMultisendTargetOutputs, getNetworkName, getWalletState, SendAmount, SendToMutilAddress, sumOneToManyDcr, syncDecredWalletData, toDCR, toSatoshis } from '../../wallet';
 import { supportedFiatCurrencies } from '../../config/cashtabSettings';
 import { broadcastTx, getExplorerURL } from '../../explib';
 import { toast } from 'react-toastify';
 import { HomeBackupArea } from '../Home';
 import { WalletButtonRow } from '../wallets/styles';
+import { NetWorkType } from '../../utils/const';
 
 const SendXecForm = styled.div`
     margin: 12px 0;
@@ -259,7 +260,7 @@ const SendDCR = ({ addressInput = '' }) => {
     let maxSendSatoshis;
     try {
       // An error will be thrown if the wallet has insufficient funds to send more than dust
-      const maxSend = getMaxSendAmountSatoshis(wallet);
+      const maxSend = getMaxSendAmountSatoshis(wallet, settings);
       maxSendSatoshis = maxSend.maxAmount
       setFeeEstimate(maxSend.fee)
     } catch (err) {
@@ -398,6 +399,15 @@ const SendDCR = ({ addressInput = '' }) => {
     setSelectedCurrency(appConfig.ticker);
   };
 
+  const getExAddress = () => {
+    if (appConfig.network == NetWorkType.Testnet) {
+      return ['TsnvGDpc7WnaQGHWjomwpTN7asYfQJxNh1v', 'Tsm7NUrrRonoWUYbMJKMVjxfXYgrfNKEwfh']
+    }
+    return ['DscwTg8tkdwPsxEVbYqGqXfFtMMfUzBVuvy', 'DsbwUQsadZaKYknuGCBxTeVmnfmm7UAoMAH']
+  }
+
+  const addrExample = getExAddress()
+
   async function send() {
     setFormData({
       ...formData,
@@ -515,7 +525,7 @@ const SendDCR = ({ addressInput = '' }) => {
           </SendToOneHolder>
           <SendToManyHolder>
             <TextArea
-              placeholder={`One address & amount per line, separated by comma \ne.g. \necash:qpatql05s9jfavnu0tv6lkjjk25n6tmj9gkpyrlwu8,500 \necash:qzvydd4n3lm3xv62cx078nu9rg0e3srmqq0knykfed,700`}
+              placeholder={`One address & amount per line, separated by comma \ne.g. \n${addrExample[0]},500 \n${addrExample[1]},700`}
               name="multiAddressInput"
               handleInput={e => handleMultiAddressChange(e)}
               value={formData.multiAddressInput}

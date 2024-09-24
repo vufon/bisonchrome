@@ -303,17 +303,6 @@ export const InputWithScanner = ({
                     invalid={typeof error === 'string'}
                     onChange={e => handleInput(e)}
                 />
-                <ScanQRCode
-                    loadWithScannerOpen={loadWithScannerOpen}
-                    onScan={result =>
-                        handleInput({
-                            target: {
-                                name: 'address',
-                                value: result,
-                            },
-                        })
-                    }
-                />
             </InputRow>
             <ErrorMsg>{typeof error === 'string' ? error : ''}</ErrorMsg>
         </CashtabInputWrapper>
