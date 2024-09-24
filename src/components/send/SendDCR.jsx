@@ -226,9 +226,9 @@ const SendDCR = ({ addressInput = '' }) => {
     }));
   };
 
-  const isValidAmount = (value) => {
+  const isValidAmount = async (value) => {
     // Validate user input send amount
-    const isValidAmountOrErrorMsg = isValidXecSendAmount(
+    const isValidAmountOrErrorMsg = await isValidXecSendAmount(
       value,
       balanceSats,
       userLocale,
@@ -239,6 +239,7 @@ const SendDCR = ({ addressInput = '' }) => {
     setSendAmountError(
       isValidAmountOrErrorMsg !== true ? isValidAmountOrErrorMsg : false,
     );
+    return isValidAmountOrErrorMsg
   }
 
   const postHandlerAmountChange = e => {
@@ -272,20 +273,24 @@ const SendDCR = ({ addressInput = '' }) => {
     // Convert to XEC to set in form
     const maxSendXec = toDCR(maxSendSatoshis);
     isValidAmount(maxSendXec)
+    let maxSendStr = maxSendXec.toString()
+    if (maxSendStr.includes(',')) {
+      maxSendStr = maxSendStr.replace(',', '.')
+    }
     // Update value in the send field
     // Note, if we are updating it to 0, we will get a 'dust' error
     postHandlerAmountChange({
       target: {
         name: 'amount',
-        value: maxSendXec,
+        value: parseFloat(maxSendStr),
       },
     });
   }
 
   const handleAmountChange = e => {
     const { value } = e.target;
-    isValidAmount(value)
-    if (!sendAmountError) {
+    const validAmount = isValidAmount(value)
+    if (validAmount === true) {
       //estimate fee
       setFeeEstimate(EstimateFee(wallet, toSatoshis(value), settings))
     }
@@ -313,7 +318,7 @@ const SendDCR = ({ addressInput = '' }) => {
         } ${(fiatPrice * multiSendTotal).toLocaleString(userLocale, {
           minimumFractionDigits: appConfig.cashDecimals,
           maximumFractionDigits: appConfig.cashDecimals,
-        })} ${settings && settings.fiatCurrency
+        }).replace(',', '.')} ${settings && settings.fiatCurrency
           ? settings.fiatCurrency.toUpperCase()
           : 'USD'
         }`
@@ -325,7 +330,7 @@ const SendDCR = ({ addressInput = '' }) => {
         } ${(fiatPrice * formData.amount).toLocaleString(userLocale, {
           minimumFractionDigits: appConfig.cashDecimals,
           maximumFractionDigits: appConfig.cashDecimals,
-        })} ${settings && settings.fiatCurrency
+        }).replace(',', '.')} ${settings && settings.fiatCurrency
           ? settings.fiatCurrency.toUpperCase()
           : 'USD'
         }`;
@@ -353,17 +358,16 @@ const SendDCR = ({ addressInput = '' }) => {
     isOneToManyXECSend,
   );
 
-  const handleMultiAddressChange = e => {
+  const handleMultiAddressChange = async e => {
     const { value, name } = e.target;
-    let errorOrIsValid = isValidMultiSendUserInput(
+    let errorOrIsValid = await isValidMultiSendUserInput(
       value,
       balanceSats,
       userLocale,
     );
-
     // If you get an error msg, set it. If validation is good, clear error msg.
     setMultiSendAddressError(
-      typeof errorOrIsValid === 'string' ? errorOrIsValid : false,
+      errorOrIsValid !== true ? errorOrIsValid : false,
     );
 
     // Set address field to user input
@@ -525,7 +529,7 @@ const SendDCR = ({ addressInput = '' }) => {
           </SendToOneHolder>
           <SendToManyHolder>
             <TextArea
-              placeholder={`One address & amount per line, separated by comma \ne.g. \n${addrExample[0]},500 \n${addrExample[1]},700`}
+              placeholder={`One address & amount per line, separated by comma \ne.g. \n${addrExample[0]},2.5 \n${addrExample[1]},1.7`}
               name="multiAddressInput"
               handleInput={e => handleMultiAddressChange(e)}
               value={formData.multiAddressInput}

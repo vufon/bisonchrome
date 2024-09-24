@@ -28,11 +28,11 @@ export const formatFiatBalance = (fiatBalance, optionalLocale) => {
         if (optionalLocale === undefined) {
             return fiatBalance.toLocaleString({
                 maximumFractionDigits: appConfig.cashDecimals,
-            });
+            }).replace(',', '.');
         }
         return fiatBalance.toLocaleString(optionalLocale, {
             maximumFractionDigits: appConfig.cashDecimals,
-        });
+        }).replace(',', '.');
     } catch (err) {
         return fiatBalance;
     }
@@ -40,14 +40,18 @@ export const formatFiatBalance = (fiatBalance, optionalLocale) => {
 
 export const formatBalance = (unformattedBalance, optionalLocale) => {
     try {
+        let dispFormat = ''
         if (optionalLocale === undefined) {
-            return new Number(unformattedBalance).toLocaleString({
+            dispFormat = new Number(unformattedBalance).toLocaleString({
                 maximumFractionDigits: appConfig.cashDecimals,
-            });
+            }).replace(',', '.')
+            return dispFormat;
         }
-        return new Number(unformattedBalance).toLocaleString(optionalLocale, {
+
+        dispFormat = new Number(unformattedBalance).toLocaleString(optionalLocale, {
             maximumFractionDigits: appConfig.cashDecimals,
-        });
+        }).replace(',', '.')
+        return dispFormat;
     } catch (err) {
         console.error(`Error in formatBalance for ${unformattedBalance}`);
         console.error(err);
@@ -105,7 +109,7 @@ export const decimalizedTokenQtyToLocaleFormat = (
 
 export const toFormattedXec = (satoshis, userLocale) => {
     // Get XEC balance
-    let xecAmount = satoshis/1e8;
+    let xecAmount = satoshis / 1e8;
     // Format up to max supply
     const trillion = 1e12;
     const billion = 1e9;

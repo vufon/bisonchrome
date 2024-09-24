@@ -134,7 +134,7 @@ export const CurrencyOption = styled.option`
     }
 `;
 
-const ErrorMsg = styled.div`
+export const ErrorMsg = styled.div`
     font-size: 14px;
     color: ${props => props.theme.forms.error};
     word-break: break-all;

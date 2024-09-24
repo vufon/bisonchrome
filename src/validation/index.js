@@ -184,7 +184,7 @@ export function parseAddressInput(
  * @returns {boolean | string} true if valid, string error msg of why invalid if not
  */
 const VALID_XEC_USER_INPUT_REGEX = /^[0-9.]+$/;
-export const isValidXecSendAmount = (
+export const isValidXecSendAmount = async (
     sendAmount,
     balanceSats,
     userLocale,
@@ -195,7 +195,7 @@ export const isValidXecSendAmount = (
         return 'sendAmount type must be number or string';
     }
     if (typeof sendAmount === 'string' && isNaN(parseFloat(sendAmount))) {
-        return `Unable to parse sendAmount "${sendAmount}" as a number`;
+        return `Unable to parse sendAmount as a number`;
     }
     // xecSendAmount may only contain numbers and '.'
     // TODO support other locale decimal markers
@@ -541,7 +541,7 @@ export const isValidCashtabWallet = wallet => {
  * @param {string} userLocale navigator.language, if available, or default if not
  * @returns {boolean | string} true if is valid, error msg about why if not
  */
-export const isValidMultiSendUserInput = (
+export const isValidMultiSendUserInput = async (
     userMultisendInput,
     balanceSats,
     userLocale,
@@ -578,8 +578,7 @@ export const isValidMultiSendUserInput = (
         }
 
         const xecSendAmount = addressAndValueThisLine[1].trim();
-        const isValidValue = isValidXecSendAmount(xecSendAmount, balanceSats);
-
+        const isValidValue = await isValidXecSendAmount(xecSendAmount, balanceSats);
         if (isValidValue !== true) {
             // isValidXecSendAmount returns a string explaining the error if it does not return true
             return `${isValidValue}: check value "${xecSendAmount}" at line ${i + 1
@@ -588,7 +587,6 @@ export const isValidMultiSendUserInput = (
         // If it is valid, then we know it has appropriate decimal places
         totalSendSatoshis += toSatoshis(Number(xecSendAmount));
     }
-
     if (totalSendSatoshis > balanceSats) {
         return `Total amount sent (${toDCR(totalSendSatoshis).toLocaleString(
             userLocale,

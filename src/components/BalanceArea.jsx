@@ -54,11 +54,19 @@ export default function BalanceArea({
         },
       );
 
+      if (formattedBalanceFiat.includes(',')) {
+        formattedBalanceFiat = formattedBalanceFiat.replace(',', '.')
+      }
+
       // Display exchange rate formatted for user's browser locale
       formattedExchangeRate = fiatPrice.toLocaleString(userLocale, {
         minimumFractionDigits: appConfig.fiatDecimals,
         maximumFractionDigits: appConfig.fiatDecimals,
       });
+      
+      if (formattedExchangeRate.includes(',')) {
+        formattedExchangeRate = formattedExchangeRate.replace(',', '.')
+      }
     }
   }
 

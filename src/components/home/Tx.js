@@ -164,7 +164,7 @@ const Tx = ({
                             <AmountTop>
                                 <>
                                     {xecTxType === 'Sent' ? '-' : ''}
-                                    {toFormattedXec(satoshisSent, userLocale,)}{' '}DCR
+                                    {toFormattedXec(satoshisSent, userLocale).replace(',', '.')}{' '}DCR
                                 </>
                             </AmountTop>
                             <AmountBottom>
@@ -186,7 +186,7 @@ const Tx = ({
                                     {toDCR(txData.fee).toLocaleString(userLocale, {
                                         maximumFractionDigits: appConfig.cashDecimals,
                                         minimumFractionDigits: appConfig.cashDecimals,
-                                    })}{' '}
+                                    }).replace(',', '.')}{' '}
                                     DCR</p>
                             </div>
                         </>
@@ -205,7 +205,7 @@ const Tx = ({
                             ).toLocaleString(userLocale, {
                                 maximumFractionDigits: 2,
                                 minimumFractionDigits: 2,
-                            })} (Now)</p>
+                            }).replace(',', '.')} (Now)</p>
                         <p className="exchange-text my-1">Confirmations:  {txData.confirmations}</p>
                     </TxExpandInfo>
                     <TxExpandInfo>
