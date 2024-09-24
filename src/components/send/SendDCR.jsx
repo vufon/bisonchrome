@@ -164,6 +164,7 @@ const SendDCR = ({ addressInput = '' }) => {
   const [sendAmountError, setSendAmountError] = useState(false);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [feeEstimate, setFeeEstimate] = useState(undefined);
+  const [feeManyEstimate, setFeeManyEstimate] = useState(undefined);
   const [parsedAddressInput, setParsedAddressInput] = useState(
     parseAddressInput(''),
   );
@@ -239,6 +240,15 @@ const SendDCR = ({ addressInput = '' }) => {
     setSendAmountError(
       isValidAmountOrErrorMsg !== true ? isValidAmountOrErrorMsg : false,
     );
+
+    if (isValidAmountOrErrorMsg === true) {
+      //estimate fee
+      const estFee = EstimateFee(wallet, toSatoshis(value), settings)
+      setFeeEstimate(estFee)
+      if (toSatoshis(value) + estFee > balanceSats) {
+        setSendAmountError(`Total send amount ${toDCR(toSatoshis(value) + estFee)} DCR exceeds ${toDCR(balanceSats)} DCR balance`);
+      }
+    }
     return isValidAmountOrErrorMsg
   }
 
@@ -289,11 +299,7 @@ const SendDCR = ({ addressInput = '' }) => {
 
   const handleAmountChange = e => {
     const { value } = e.target;
-    const validAmount = isValidAmount(value)
-    if (validAmount === true) {
-      //estimate fee
-      setFeeEstimate(EstimateFee(wallet, toSatoshis(value), settings))
-    }
+    isValidAmount(value)
     postHandlerAmountChange(e)
   };
 
@@ -358,8 +364,7 @@ const SendDCR = ({ addressInput = '' }) => {
     isOneToManyXECSend,
   );
 
-  const handleMultiAddressChange = async e => {
-    const { value, name } = e.target;
+  const isMutilAddressAmountValid = async (value) => {
     let errorOrIsValid = await isValidMultiSendUserInput(
       value,
       balanceSats,
@@ -370,6 +375,24 @@ const SendDCR = ({ addressInput = '' }) => {
       errorOrIsValid !== true ? errorOrIsValid : false,
     );
 
+    if (errorOrIsValid === true) {
+      let multiSendTotal = sumOneToManyDcr(value.split('\n'))
+      if (isNaN(multiSendTotal)) {
+        multiSendTotal = 0;
+      }
+      //estimate fee
+      const estFee = EstimateFee(wallet, toSatoshis(multiSendTotal), settings)
+      setFeeManyEstimate(estFee)
+      if (toSatoshis(multiSendTotal) + estFee > balanceSats) {
+        setMultiSendAddressError(`Total send amount ${toDCR(toSatoshis(multiSendTotal) + estFee)} DCR exceeds ${toDCR(balanceSats)} DCR balance`);
+      }
+    }
+    return errorOrIsValid
+  }
+
+  const handleMultiAddressChange = async e => {
+    const { value, name } = e.target;
+    isMutilAddressAmountValid(value)
     // Set address field to user input
     setFormData(p => ({
       ...p,
@@ -468,6 +491,12 @@ const SendDCR = ({ addressInput = '' }) => {
     }
   }
 
+  const setOneToMany = () => {
+    setIsOneToManyXECSend(!isOneToManyXECSend)
+    setSendAmountError(false)
+    setMultiSendAddressError(false)
+  }
+
   return (
     <>
       {isModalVisible && (
@@ -498,7 +527,7 @@ const SendDCR = ({ addressInput = '' }) => {
             right={115}
             checked={isOneToManyXECSend}
             handleToggle={() =>
-              setIsOneToManyXECSend(!isOneToManyXECSend)
+              setOneToMany()
             }
           />
         </SwitchContainer>
@@ -538,8 +567,14 @@ const SendDCR = ({ addressInput = '' }) => {
           </SendToManyHolder>
         </InputModesHolder>
         <AmountPreviewCtn>
-          {feeEstimate ? (
-            <ConvertAmount>Fee (Estimate): {(selectedCurrency === appConfig.ticker ? toDCR(feeEstimate) : (toDCR(feeEstimate) * fiatPrice).toLocaleString(userLocale, {
+          {feeEstimate && !sendAmountError && !isOneToManyXECSend ? (
+            <ConvertAmount>Fees (Estimate): {(selectedCurrency === appConfig.ticker ? toDCR(feeEstimate) : (toDCR(feeEstimate) * fiatPrice).toLocaleString(userLocale, {
+              minimumFractionDigits: appConfig.cashDecimals,
+              maximumFractionDigits: appConfig.cashDecimals,
+            })) + ' ' + selectedCurrency}</ConvertAmount>
+          ) : (<></>)}
+          {feeManyEstimate && !multiSendAddressError && isOneToManyXECSend ? (
+            <ConvertAmount>Fees (Estimate): {(selectedCurrency === appConfig.ticker ? toDCR(feeManyEstimate) : (toDCR(feeManyEstimate) * fiatPrice).toLocaleString(userLocale, {
               minimumFractionDigits: appConfig.cashDecimals,
               maximumFractionDigits: appConfig.cashDecimals,
             })) + ' ' + selectedCurrency}</ConvertAmount>
