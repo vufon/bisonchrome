@@ -393,13 +393,9 @@ export const createNewWalletAddress = async (wallet, wallets, updateDecredState)
  * @returns {array} targetOutputs for the sendXec function
  */
 export const getMultisendTargetOutputs = userMultisendInput => {
-    if (isValidMultiSendUserInput(userMultisendInput) !== true) {
-        throw new Error('Invalid input for Decred multisend tx');
-    }
     // User input is validated as a string of
     // address, value\naddress, value\naddress, value\n
     const addressValueArray = userMultisendInput.split('\n');
-
     const targetOutputs = [];
     for (let addressValueCsvPair of addressValueArray) {
         const addressValueLineArray = addressValueCsvPair.split(',');

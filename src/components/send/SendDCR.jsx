@@ -380,6 +380,7 @@ const SendDCR = ({ addressInput = '' }) => {
       if (isNaN(multiSendTotal)) {
         multiSendTotal = 0;
       }
+      multiSendTotal = Number(multiSendTotal.toFixed(8))
       //estimate fee
       const estFee = EstimateFee(wallet, toSatoshis(multiSendTotal), settings)
       setFeeManyEstimate(estFee)
@@ -445,23 +446,22 @@ const SendDCR = ({ addressInput = '' }) => {
       return
     }
     let addresses = []
-    if (isOneToManyXECSend) {
-      // Handle DCR send to multiple addresses
-      addresses = addresses.concat(
-        getMultisendTargetOutputs(formData.multiAddressInput),
-      );
-    } else {
-      const satoshisToSend =
-        selectedCurrency === 'DCR'
-          ? toSatoshis(formData.amount)
-          : fiatToSatoshis(formData.amount, fiatPrice);
-      addresses.push({
-        address: formData.address,
-        atoms: satoshisToSend,
-      })
-    }
-    //send amount
     try {
+      if (isOneToManyXECSend) {
+        // Handle DCR send to multiple addresses
+        const targetOutputs = getMultisendTargetOutputs(formData.multiAddressInput)
+        addresses.push(...targetOutputs)
+      } else {
+        const satoshisToSend =
+          selectedCurrency === 'DCR'
+            ? toSatoshis(formData.amount)
+            : fiatToSatoshis(formData.amount, fiatPrice);
+        addresses.push({
+          address: formData.address,
+          atoms: satoshisToSend,
+        })
+      }
+      //send amount
       const txResult = SendToMutilAddress(wallet, addresses, settings)
       if (txResult.tx && txResult.tx.hash) {
         //broadcast tx to network
