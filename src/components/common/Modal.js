@@ -16,7 +16,7 @@ const ModalContainer = styled.div`
     max-width: 100%;
     max-height: 100%;
     border-radius: 9px;
-    background: rgba(0, 0, 0, 0.75);
+    background: rgba(50, 50, 50, 0.75);
     backdrop-filter: blur(5px);
     padding: 12px;
     z-index: 1000;
@@ -33,7 +33,7 @@ const ModalTitle = styled.div`
     font-size: 20px;
     text-align: center;
     width: 100%;
-    color: ${props => props.theme.eCashBlue};
+    color: #fff;
 `;
 
 const MODAL_HEIGHT_DELTA = 68;
@@ -83,7 +83,7 @@ const ButtonHolder = styled.div`
     transform: translate(-50%, -50%);
 `;
 const ModalBaseButton = styled.button`
-    font-size: 14px;
+    font-size: 16px;
     padding: 8px 0;
     border-radius: 9px;
     transition: all 0.5s ease;

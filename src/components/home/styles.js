@@ -102,7 +102,8 @@ export const Timestamp = styled.div`
     display: flex;
     width: 100%;
     text-align: left;
-    font-size: 18px;
+    font-size: 15px;
+    margin-top: 3px;
     color: ${props => props.theme.lightWhite};
 `;
 export const AmountCol = styled.div`
@@ -113,7 +114,7 @@ export const AmountCol = styled.div`
 export const AmountTop = styled.div`
     display: flex;
     width: 100%;
-    font-size: 18px;
+    font-size: 16px;
     justify-content: flex-end;
 `;
 export const AmountBottom = styled.div`

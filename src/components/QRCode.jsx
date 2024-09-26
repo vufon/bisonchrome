@@ -27,7 +27,6 @@ export const CustomQRCode = styled(QRCodeSVG)`
 const Copied = styled.div`
     font-size: 24px;
     font-family: 'Roboto Mono', monospace;
-    font-weight: bold;
     width: 100%;
     text-align: center;
     background-color: ${props => props.theme.eCashBlue};
@@ -39,8 +38,9 @@ const Copied = styled.div`
     padding: 30px 0;
 `;
 const PrefixLabel = styled.span`
-    font-size: 18px;
-    color: ${props => props.theme.eCashBlue};
+    font-size: 20px;
+    font-weight: 400;
+    color: #fff;
     -webkit-touch-callout: none;
     -webkit-user-select: none;
     -khtml-user-select: none;

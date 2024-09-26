@@ -56,12 +56,10 @@ const BackupWallet = () => {
                 <FlexRow>
                     <Alert className="notranslate">
                         <b>
-                            ⚠️ NEVER SHARE YOUR SEED PHRASE
+                            <p className='c-red'>⚠️ Never share your seed phrase</p>
                             {!userLocale.includes('en-') && (
                                 <>
-                                    <br />
-                                    <br />
-                                    ⚠️ STORE YOUR SEED PHRASE IN ENGLISH
+                                    <p className='c-red mb-2'>⚠️ Store your seed phrase in English</p>
                                 </>
                             )}
                         </b>
@@ -87,7 +85,7 @@ const BackupWallet = () => {
                     )}
                 </FlexRow>
             </BackupFlex>
-        </HomeBackupArea>
+        </HomeBackupArea >
     );
 };
 

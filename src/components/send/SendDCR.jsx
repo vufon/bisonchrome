@@ -21,6 +21,7 @@ import { toast } from 'react-toastify';
 import { HomeBackupArea } from '../Home';
 import { WalletButtonRow } from '../wallets/styles';
 import { NetWorkType } from '../../utils/const';
+import { GeneralSettingsItem, Switches, ToggleLabel } from '../configure/Configure';
 
 const SendXecForm = styled.div`
     margin: 12px 0;
@@ -47,7 +48,7 @@ const SwitchContainer = styled.div`
     justify-content: flex-start;
     color: ${props => props.theme.forms.text};
     white-space: nowrap;
-    margin: 12px 0;
+    margin-bottom: 12px;
 `;
 
 // const SentLink = styled.a`
@@ -64,6 +65,7 @@ const AliasAddressPreviewLabel = styled.div`
 
 const AmountPreviewCtn = styled.div`
     margin: 12px;
+    margin-top: 15px;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -89,7 +91,7 @@ const AmountPreviewCtn = styled.div`
 const LocaleFormattedValue = styled.div`
     color: ${props => props.theme.contrast};
     font-weight: bold;
-    font-size: 1.17em;
+    font-size: 22px;
     margin-bottom: 0;
 `;
 
@@ -111,7 +113,6 @@ const SentLink = styled.a`
 `;
 
 const InputModesHolder = styled.div`
-    min-height: 9rem;
     ${SendToOneHolder} {
         overflow: hidden;
         transition: ${props =>
@@ -519,17 +520,18 @@ const SendDCR = ({ addressInput = '' }) => {
       )}
       <HomeBackupArea>
         <SwitchContainer>
-          <Switch
-            name="Toggle Multisend"
-            on="Send to many"
-            off="Send to one"
-            width={150}
-            right={115}
-            checked={isOneToManyXECSend}
-            handleToggle={() =>
-              setOneToMany()
-            }
-          />
+          <Switches>
+            <GeneralSettingsItem>
+              <Switch
+                name="Toggle Multisend"
+                checked={isOneToManyXECSend}
+                handleToggle={() =>
+                  setOneToMany()
+                }
+              />
+              <ToggleLabel>Multi-Address</ToggleLabel>
+            </GeneralSettingsItem>
+          </Switches>
         </SwitchContainer>
         <InputModesHolder open={isOneToManyXECSend}>
           <SendToOneHolder>
@@ -580,25 +582,33 @@ const SendDCR = ({ addressInput = '' }) => {
             })) + ' ' + selectedCurrency}</ConvertAmount>
           ) : (<></>)}
           {isOneToManyXECSend ? (
-            <LocaleFormattedValue>
-              {formatBalance(multiSendTotal, userLocale) +
-                ' ' +
-                selectedCurrency}
-            </LocaleFormattedValue>
+            <div className='d-flex ai-center mt-1'>
+              <span className='fs-16 me-2'>Total:</span>
+              <LocaleFormattedValue>
+                {!isNaN(multiSendTotal) ?
+                  formatBalance(Number(multiSendTotal) + (feeManyEstimate ? toDCR(feeManyEstimate) : 0), userLocale) +
+                  ' ' +
+                  selectedCurrency
+                  : ''}
+              </LocaleFormattedValue>
+            </div>
           ) : (
-            <LocaleFormattedValue>
-              {!isNaN(formData.amount)
-                ? formatBalance(
-                  formData.amount,
-                  userLocale,
-                ) +
-                ' ' +
-                selectedCurrency
-                : ''}
-            </LocaleFormattedValue>
+            <div className='d-flex ai-center mt-1'>
+              <span className='fs-16 me-2'>Total:</span>
+              <LocaleFormattedValue>
+                {!isNaN(formData.amount)
+                  ? formatBalance(
+                    Number(formData.amount) + (feeEstimate ? toDCR(feeEstimate) : 0),
+                    userLocale,
+                  ) +
+                  ' ' +
+                  selectedCurrency
+                  : ''}
+              </LocaleFormattedValue>
+            </div>
           )}
           <ConvertAmount>
-            {fiatPriceString !== '' && '='} {fiatPriceString}
+            {fiatPriceString !== '' && '~'} {fiatPriceString}
           </ConvertAmount>
         </AmountPreviewCtn>
         <WalletButtonRow>

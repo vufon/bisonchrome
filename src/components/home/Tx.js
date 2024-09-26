@@ -182,7 +182,7 @@ const Tx = ({
                     {xecTxType === 'Sent' ? (
                         <>
                             <div>
-                                <p className="exchange-text my-1">Fee: -
+                                <p className="exchange-text my-1 fs-15">Fee: -
                                     {toDCR(txData.fee).toLocaleString(userLocale, {
                                         maximumFractionDigits: appConfig.cashDecimals,
                                         minimumFractionDigits: appConfig.cashDecimals,
@@ -194,7 +194,7 @@ const Tx = ({
                         <></>
                     )}
                     <TxExpandInfo>
-                        <p className="exchange-text my-1">Exchange Amount:  {xecTxType === 'Sent' ? '-' : ''}
+                        <p className="exchange-text my-1 fs-15">Exchange Amount:  {xecTxType === 'Sent' ? '-' : ''}
                             {
                                 supportedFiatCurrencies[
                                     fiatCurrency
@@ -206,11 +206,11 @@ const Tx = ({
                                 maximumFractionDigits: 2,
                                 minimumFractionDigits: 2,
                             }).replace(',', '.')} (Now)</p>
-                        <p className="exchange-text my-1">Confirmations:  {txData.confirmations}</p>
+                        <p className="exchange-text my-1 fs-15">Confirmations:  {txData.confirmations}</p>
                     </TxExpandInfo>
                     <TxExpandInfo>
-                        <p className="exchange-text my-1">Inputs: {txData.vin.length}</p>
-                        <p className="exchange-text my-1">Outputs: {txData.vout.length}</p>
+                        <p className="exchange-text my-1 fs-15">Inputs: {txData.vin.length}</p>
+                        <p className="exchange-text my-1 fs-15">Outputs: {txData.vout.length}</p>
                     </TxExpandInfo>
                 </Expand>
             </TxWrapper >

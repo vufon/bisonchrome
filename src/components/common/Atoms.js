@@ -39,8 +39,9 @@ export const AlertMsg = styled.p`
 export const ConvertAmount = styled.div`
     color: ${props => props.theme.contrast};
     width: 100%;
-    font-size: 14px;
-    margin-bottom: 10px;
+    font-size: 16px;
+    margin-bottom: 5px;
+    margin-top: 5px;
     @media (max-width: 768px) {
         font-size: 12px;
     }
@@ -75,7 +76,7 @@ export const Info = styled.div`
     border-radius: 12px;
     color: ${props => props.theme.eCashBlue};
     padding: 12px;
-    font-size: 17px;
+    font-size: 16px;
     text-align: center;
 `;
 export const BlockNotification = styled.div`

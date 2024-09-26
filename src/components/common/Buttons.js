@@ -10,7 +10,7 @@ import { toast } from 'react-toastify';
 import PropTypes from 'prop-types';
 
 const BaseButtonOrLinkCss = css`
-    font-size: 20px;
+    font-size: 18px;
     padding: 10px 0;
     border-radius: 9px;
     transition: all 0.5s ease;

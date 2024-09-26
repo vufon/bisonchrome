@@ -22,7 +22,7 @@ export const theme = {
     separator: 'rgba(255, 255, 255, 0.12)',
     receivedMessage: 'rgba(0,171,231,0.2)',
     sentMessage: 'rgba(255, 255, 255, 0.1)',
-    lightWhite: 'rgba(255,255,255,0.4)',
+    lightWhite: 'rgba(255,255,255,0.7)',
     lightGrey: 'hsla(0, 0%, 49.8%, 0.65);',
     dropdownText: '#000',
     shadow: 'rgba(0, 0, 0, 0.4)',

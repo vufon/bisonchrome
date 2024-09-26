@@ -35,7 +35,7 @@ const SwitchInner = styled.span`
             props.bgImageOn
                 ? `background: ${props.theme.eCashBlue} url(${props.bgImageOn}) 20%/contain no-repeat`
                 : `background-color: ${props.theme.eCashBlue}`};
-        text-transform: uppercase;
+        text-transform: inherit;
         padding-left: 10px;
         color: #fff;
     }
@@ -56,8 +56,8 @@ const SwitchInner = styled.span`
         ${props =>
             props.bgImageOff
                 ? `background: ${props.bgColorOff} url(${props.bgImageOff}) 80%/contain no-repeat`
-                : `background-color: ${props.bgColorOff}`};
-        text-transform: uppercase;
+                : `background-color: rgb(145 145 145)`};
+        text-transform: inherit;
         padding-right: 10px;
         color: #fff;
         text-align: right;

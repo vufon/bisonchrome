@@ -40,8 +40,8 @@ const InputRow = styled.div`
 const CashtabInput = styled.input`
     ${props => props.disabled && `cursor: not-allowed`};
     background-color: ${props => props.theme.forms.selectionBackground};
-    font-size: 18px;
-    padding: 16px 12px;
+    font-size: 16px;
+    padding: 12px 12px;
     border-radius: 9px;
     width: 100%;
     color: ${props => props.theme.forms.text};
@@ -60,8 +60,8 @@ const ModalInputField = styled(CashtabInput)`
 
 const CashtabTextArea = styled.textarea`
     background-color: ${props => props.theme.forms.selectionBackground};
-    font-size: 12px;
-    padding: 16px 12px;
+    font-size: 15px;
+    padding: 12px 12px;
     border-radius: 9px;
     width: 100%;
     color: ${props => props.theme.forms.text};
@@ -99,7 +99,7 @@ const OnMaxBtn = styled.button`
     background-color: ${props => props.theme.forms.selectionBackground};    
     border-left: none !important;
     font-size: 18px;
-    padding: 16px;    
+    padding: 10px;    
 `;
 
 const OnMaxBtnToken = styled(OnMaxBtn)`
@@ -113,7 +113,7 @@ const AliasSuffixHolder = styled(OnMaxBtn)`
 
 export const CurrencyDropdown = styled.select`
     cursor: ${props => (props.disabled ? 'not-allowed' : 'pointer')};
-    font-size: 18px;
+    font-size: 16px;
     padding: 6px;
     color: ${props =>
         props.invalid ? props.theme.forms.error : props.theme.contrast};

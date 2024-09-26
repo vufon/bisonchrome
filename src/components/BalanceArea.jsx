@@ -91,11 +91,11 @@ export default function BalanceArea({
       </div>
       {wallet.syncWallet ? (<>
         <h3 className="flex-center cardTitle ai-end mt-1"> {formattedBalanceDCR}<span className="fs-17 pb-3px me-1">{afterDecimalDisplay}</span> {appConfig.ticker}</h3>
-        <p className="flex-center my-1">~{supportedFiatCurrencies[settings.fiatCurrency].symbol}{formattedBalanceFiat}&nbsp;
+        <p className="flex-center my-1 fs-16">~{supportedFiatCurrencies[settings.fiatCurrency].symbol}{formattedBalanceFiat}&nbsp;
           {supportedFiatCurrencies[
             settings.fiatCurrency
           ].slug.toUpperCase()}</p>
-        <p className="flex-center exchange-text my-1">1 {appConfig.ticker} = {formattedExchangeRate}{' '}{settings.fiatCurrency.toUpperCase()}</p>
+        <p className="flex-center exchange-text my-1 fs-16">1 {appConfig.ticker} = {formattedExchangeRate}{' '}{settings.fiatCurrency.toUpperCase()}</p>
       </>) : (<>
         <p className="flex-center my-1">{wallet.syncPercent <= 40 ? 'Initializing address list... ' : 'Fetching data from API... '}{wallet.syncPercent ? wallet.syncPercent.toFixed(2) : 0}%</p>
         <div id="progressbar">
