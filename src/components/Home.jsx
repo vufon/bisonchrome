@@ -34,13 +34,6 @@ export default function Home({ setPage }) {
   const txHistories = cleanParsedTxHistory(parsedTxHistory)
   const hasHistory = parsedTxHistory && parsedTxHistory.length > 0;
   const userLocale = getUserLocale(navigator);
-  //Test WASM code. TODO: Remove
-  chrome.runtime.sendMessage({
-    id: "wasm",
-    payload: "print"
-  }, function (res) {
-    console.log('check response data : ' + res.response)
-  })
   return (
     <HomeBackupArea className="pb-0">
       <TxHistoryCtn>

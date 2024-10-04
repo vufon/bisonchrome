@@ -47,7 +47,8 @@
       ],
       "resources": [
         "wasm_mod.js",
-        "wasm_mod_bg.wasm"
+        "api.wasm",
+        "sw.js"
       ]
     }
   ],
