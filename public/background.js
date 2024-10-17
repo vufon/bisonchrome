@@ -1,10 +1,23 @@
 import initWasmModule, { wasmExportSeed, wasmCreateWallet } from './wasm_mod.js';
+const fs = require('fs');
 "use strict";
 
 (async () => {
   console.log('init on background')
   await initWasmExec()
   await initWasmModule();
+  // Specify the file path and content
+  const filePath = './myfile.txt';
+  const fileContent = 'This is some sample content.';
+
+  // Create the file
+  fs.writeFile(filePath, fileContent, (err) => {
+    if (err) {
+      console.error('Error creating file:', err);
+    } else {
+      console.log('File created successfully.');
+    }
+  });
 })();
 
 chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
